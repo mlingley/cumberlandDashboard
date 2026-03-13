@@ -1,8 +1,8 @@
 
 // ---------- SIDEBAR LAYER TOGGLES (OpenLayers) ----------
 document.getElementById('layer-flood').addEventListener('change', function(e) {
-    if (floodLayerFundy) floodLayerFundy.setVisible(e.target.checked);
-    if (floodLayerNorth) floodLayerNorth.setVisible(e.target.checked);
+    if (activeFundyLayer) activeFundyLayer.setVisible(e.target.checked);
+    if (activeNorthLayer) activeNorthLayer.setVisible(e.target.checked);
 });
 document.getElementById('layer-roads').addEventListener('change', function(e) {
     roadsLayer.setVisible(e.target.checked);
@@ -158,9 +158,9 @@ updateFloodDisplay(0);
     });
 })();
 
-console.log('Cumberland County Flood Dashboard initialized (OpenLayers + COG TIFF)');
-console.log('Tide stations: Saint John, Charlottetown, Caribou');
-console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via COG TIFF)');
+console.log('Cumberland County Flood Dashboard initialized (OpenLayers + XYZ Tiles)');
+console.log('Tide stations: Saint John, Pointe-du-Chêne, Charlottetown, Caribou');
+console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via pre-rendered XYZ tiles)');
 console.log('Roads & Infrastructure: OpenStreetMap GeoJSON');
 
 </script>

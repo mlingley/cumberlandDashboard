@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -358,10 +358,10 @@
             <h3>Project Information</h3>
             <table class="ref-table">
                 <tr><td>Organization</td><td>Applied Geomatics Research Group (AGRG)</td></tr>
-                <tr><td>Project</td><td>2023 Research â€” NS ACRC Cumberland County Flood Risk</td></tr>
+                <tr><td>Project</td><td>2023 Research — NS ACRC Cumberland County Flood Risk</td></tr>
                 <tr><td>Software</td><td>Esri ArcGIS Pro 13.3.0</td></tr>
-                <tr><td>Processing Date</td><td>March 21â€“25, 2025</td></tr>
-                <tr><td>Capstone</td><td>INFT3000 â€” Cumberland County Flood Risk Assessment</td></tr>
+                <tr><td>Processing Date</td><td>March 21–25, 2025</td></tr>
+                <tr><td>Capstone</td><td>INFT3000 — Cumberland County Flood Risk Assessment</td></tr>
             </table>
             <h3>DEM &amp; Elevation Model</h3>
             <table class="ref-table">
@@ -414,8 +414,7 @@
 <script src="https://cdn.jsdelivr.net/npm/ol@10.2.1/dist/ol.js"></script>
 <!-- proj4js for projection support -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
-<!-- GeoTIFF.js for COG rendering -->
-<script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+<!-- GeoTIFF.js removed — flood data now served as pre-rendered XYZ tiles -->
 
 <script>
 // Register UTM Zone 20N projection (NAD83 CSRS v6)
@@ -619,11 +618,8 @@ view.on('change:resolution', function() {
 });
 
 // ---------- FLOOD LAYER STATE ----------
-var floodLayerFundy = null;
-var floodLayerNorth = null;
 var userLayers = {};
 var userLayerCounter = 0;
-var floodCache = {};
 var currentFloodLevel = 0;
 var currentSide = 'both';
 
@@ -871,7 +867,7 @@ map.on('pointermove', function(evt) {
     map.getTargetElement().style.cursor = hit ? 'pointer' : '';
 });
 
-// ---------- FLOOD SLIDER LOGIC (COG TIFF EPSG:3857 â€” optimized) ----------
+// ---------- FLOOD SLIDER LOGIC (XYZ Pre-rendered Tiles) ----------
 var FLOOD_MIN = 0;
 var FLOOD_MAX = 11;
 var FLOOD_STEP = 0.1;
@@ -885,85 +881,40 @@ function getFloodOpacity(level) {
     return 0.25 + (level / FLOOD_MAX) * 0.30;
 }
 
-function cogTiffUrl(side, level) {
-    return 'assets/cog_3857/' + (side === 'fundy' ? 'fundy' : 'north') + '/RasterFlood_' + levelToKey(level) + '.tif';
+// XYZ tile URL pattern — tiles pre-rendered by generate_tiles.py
+function floodTileUrl(side, levelKey) {
+    return 'assets/tiles/' + side + '/' + levelKey + '/{z}/{x}/{y}.png';
 }
 
-// ABGR color for Uint32Array (little-endian: byte order is R,G,B,A in memory = ABGR as uint32)
-function makeFloodColor32(alpha) {
-    return (alpha << 24) | (235 << 16) | (99 << 8) | 37;
-}
-
-// Parse COG â†’ OL ImageStatic layer (EPSG:3857, no reprojection)
-// Uses Uint32Array for 4x faster pixel fill vs byte-by-byte
-async function loadCogTiffLayer(side, level) {
-    var url = cogTiffUrl(side, level);
-    var response = await fetch(url);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    var arrayBuffer = await response.arrayBuffer();
-    var tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
-    var image = await tiff.getImage();
-    var width = image.getWidth();
-    var height = image.getHeight();
-    var origin = image.getOrigin();
-    var res = image.getResolution();
-    var rasterData = await image.readRasters({ samples: [0] });
-    var band = rasterData[0];
-
-    // Extent in EPSG:3857
-    var extent = [origin[0], origin[1] + height * res[1], origin[0] + width * res[0], origin[1]];
-
-    // Nodata
-    var noData = null;
-    if (image.fileDirectory.GDAL_NODATA !== undefined) {
-        noData = parseFloat(image.fileDirectory.GDAL_NODATA);
-    }
-
-    // Uint32Array pixel fill â€” single 32-bit write per pixel instead of 4 byte writes
-    var canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    var ctx = canvas.getContext('2d');
-    var imgData = ctx.createImageData(width, height);
-    var buf32 = new Uint32Array(imgData.data.buffer);
-    var floodColor = makeFloodColor32(Math.round(getFloodOpacity(level) * 255));
-
-    for (var i = 0, len = band.length; i < len; i++) {
-        var v = band[i];
-        if (v !== 0 && v === v && v !== noData) {
-            buf32[i] = floodColor;
-        }
-    }
-    ctx.putImageData(imgData, 0, 0);
-
-    // Create blob URL from canvas
-    var blobUrl = await new Promise(function(resolve) {
-        canvas.toBlob(function(blob) {
-            resolve(blob ? URL.createObjectURL(blob) : canvas.toDataURL());
-        }, 'image/png');
-    });
-
-    return new ol.layer.Image({
-        source: new ol.source.ImageStatic({
-            url: blobUrl,
-            imageExtent: extent,
-            projection: 'EPSG:3857'
+// Create a tile layer for a given side + level
+function createFloodTileLayer(side, level) {
+    var key = levelToKey(level);
+    return new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            url: floodTileUrl(side, key),
+            minZoom: 10,
+            maxZoom: 15,
+            tileSize: 256,
+            crossOrigin: 'anonymous',
+            // Don't throw errors for missing tiles (sparse tileset)
+            transition: 250
         }),
-        zIndex: side === 'fundy' ? 10 : 11
+        opacity: 1, // Alpha is baked into the tile PNGs
+        zIndex: side === 'fundy' ? 10 : 11,
+        visible: true
     });
 }
 
-// Layer cache and active tracking
-var floodCache = {};
 var activeFundyLayer = null;
 var activeNorthLayer = null;
+var floodTileCache = {};
 
 function removeActiveFloodLayers() {
     if (activeFundyLayer) { try { map.removeLayer(activeFundyLayer); } catch(e) {} activeFundyLayer = null; }
     if (activeNorthLayer) { try { map.removeLayer(activeNorthLayer); } catch(e) {} activeNorthLayer = null; }
 }
 
-async function updateFloodDisplay(level) {
+function updateFloodDisplay(level) {
     var overlay = document.getElementById('loading-overlay');
     overlay.classList.add('visible');
     removeActiveFloodLayers();
@@ -974,41 +925,31 @@ async function updateFloodDisplay(level) {
 
     var showFlood = document.getElementById('layer-flood').checked;
     var key = levelToKey(level);
-    var promises = [];
 
     if (currentSide === 'both' || currentSide === 'fundy') {
         var ckF = 'fundy_' + key;
-        promises.push(
-            (floodCache[ckF] ? Promise.resolve(floodCache[ckF]) : loadCogTiffLayer('fundy', level).then(function(l) { floodCache[ckF] = l; return l; }))
-            .then(function(layer) { activeFundyLayer = layer; map.addLayer(layer); layer.setVisible(showFlood); })
-            .catch(function(e) { console.warn('Fundy:', e.message); })
-        );
+        if (!floodTileCache[ckF]) {
+            floodTileCache[ckF] = createFloodTileLayer('fundy', level);
+        }
+        activeFundyLayer = floodTileCache[ckF];
+        map.addLayer(activeFundyLayer);
+        activeFundyLayer.setVisible(showFlood);
     }
     if (currentSide === 'both' || currentSide === 'north') {
         var ckN = 'north_' + key;
-        promises.push(
-            (floodCache[ckN] ? Promise.resolve(floodCache[ckN]) : loadCogTiffLayer('north', level).then(function(l) { floodCache[ckN] = l; return l; }))
-            .then(function(layer) { activeNorthLayer = layer; map.addLayer(layer); layer.setVisible(showFlood); })
-            .catch(function(e) { console.warn('North:', e.message); })
-        );
+        if (!floodTileCache[ckN]) {
+            floodTileCache[ckN] = createFloodTileLayer('north', level);
+        }
+        activeNorthLayer = floodTileCache[ckN];
+        map.addLayer(activeNorthLayer);
+        activeNorthLayer.setVisible(showFlood);
     }
 
-    await Promise.all(promises);
-    overlay.classList.remove('visible');
-
-    // Lazy prefetch: only preload the next level in the direction user was going, after a delay
-    clearTimeout(window._prefetchTimer);
-    window._prefetchTimer = setTimeout(function() {
-        var next = Math.round((level + FLOOD_STEP) * 10) / 10;
-        if (next <= FLOOD_MAX) {
-            if ((currentSide === 'both' || currentSide === 'fundy') && !floodCache['fundy_' + levelToKey(next)]) {
-                loadCogTiffLayer('fundy', next).then(function(l) { floodCache['fundy_' + levelToKey(next)] = l; }).catch(function(){});
-            }
-            if ((currentSide === 'both' || currentSide === 'north') && !floodCache['north_' + levelToKey(next)]) {
-                loadCogTiffLayer('north', next).then(function(l) { floodCache['north_' + levelToKey(next)] = l; }).catch(function(){});
-            }
-        }
-    }, 2000);
+    // Tiles load on-demand via HTTP — no heavy parsing needed
+    // Small delay to let tile requests fire, then hide overlay
+    setTimeout(function() {
+        overlay.classList.remove('visible');
+    }, 200);
 }
 
 function clampLevel(val) {
@@ -1097,12 +1038,10 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
     })
     .catch(function(err) { console.error('Infrastructure error:', err); });
 
-
-
 // ---------- SIDEBAR LAYER TOGGLES (OpenLayers) ----------
 document.getElementById('layer-flood').addEventListener('change', function(e) {
-    if (floodLayerFundy) floodLayerFundy.setVisible(e.target.checked);
-    if (floodLayerNorth) floodLayerNorth.setVisible(e.target.checked);
+    if (activeFundyLayer) activeFundyLayer.setVisible(e.target.checked);
+    if (activeNorthLayer) activeNorthLayer.setVisible(e.target.checked);
 });
 document.getElementById('layer-roads').addEventListener('change', function(e) {
     roadsLayer.setVisible(e.target.checked);
@@ -1258,9 +1197,9 @@ updateFloodDisplay(0);
     });
 })();
 
-console.log('Cumberland County Flood Dashboard initialized (OpenLayers + COG TIFF)');
-console.log('Tide stations: Saint John, Charlottetown, Caribou');
-console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via COG TIFF)');
+console.log('Cumberland County Flood Dashboard initialized (OpenLayers + XYZ Tiles)');
+console.log('Tide stations: Saint John, Pointe-du-Chêne, Charlottetown, Caribou');
+console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via pre-rendered XYZ tiles)');
 console.log('Roads & Infrastructure: OpenStreetMap GeoJSON');
 
 </script>
