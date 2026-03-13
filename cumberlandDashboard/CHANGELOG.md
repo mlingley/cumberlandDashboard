@@ -1,5 +1,44 @@
 # Cumberland Flood Dashboard — Changelog
 
+---
+
+## v1.2 — Stakeholder Feedback Implementation
+
+**Date:** March 5, 2026
+
+### Changes
+
+**1. Pointe-du-Chêne Tide Gauge Added**
+- New station: Pointe-du-Chêne, NB (CHS Station 01804) — live API feed, map marker, sidebar widget.
+- Tide station count increased from 3 to 4.
+
+**2. Datum Conversion: CD → CGVD2013**
+- All water levels now displayed in CGVD2013 (Canadian Geodetic Vertical Datum of 2013) instead of Chart Datum.
+- Per-station offsets applied: Saint John −4.755m, Pointe-du-Chêne −1.478m, Charlottetown −2.012m, Caribou −1.757m.
+- Thresholds (NORMAL/ELEVATED/CRITICAL) recalculated for CGVD2013 equivalents.
+
+**3. Embedded 24h Water Level Charts**
+- Each tide station widget now includes an expand/collapse sparkline chart showing the last 24 hours of observed water levels (CGVD2013).
+- Charts rendered via native HTML5 Canvas — zero external dependencies.
+- CGVD2013 zero-line reference rendered when data crosses zero.
+
+**4. Direct Links to tides.gc.ca**
+- Each station widget includes a clickable external link to the corresponding tides.gc.ca station page for full historical graphs and predictions.
+
+**5. AGRG Reference Data Modal**
+- New "Reference Data" sidebar section with a button that opens a modal overlay.
+- Modal contains AGRG project metadata: DEM specs, coordinate system, flood model parameters, ocean reference points, and the full CD-to-CGVD2013 offset table.
+- Accessible via click, closeable via X button, backdrop click, or Escape key.
+
+**6. Sidebar Footer Updated**
+- Added vertical datum note (CGVD2013) to sidebar footer.
+
+**Files changed:** `index.html`, `styles/map.css`, `CHANGELOG.md`
+
+---
+
+## v1.0 — Initial Production Release
+
 **Date:** February 15, 2026
 **Author:** Automated upgrade (AI-assisted)
 **Branch:** Main

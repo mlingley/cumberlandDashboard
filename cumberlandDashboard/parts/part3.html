@@ -24,16 +24,84 @@
     </div>
 </div>
 
+<!-- Reference Data Modal -->
+<div class="modal-backdrop" id="ref-modal-backdrop">
+    <div class="modal-content" role="dialog" aria-labelledby="ref-modal-title" aria-modal="true">
+        <div class="modal-header">
+            <h2 id="ref-modal-title">AGRG Project Metadata &amp; Datum Reference</h2>
+            <button class="modal-close" id="close-ref-modal" aria-label="Close modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <h3>Project Information</h3>
+            <table class="ref-table">
+                <tr><td>Organization</td><td>Applied Geomatics Research Group (AGRG)</td></tr>
+                <tr><td>Project</td><td>2023 Research — NS ACRC Cumberland County Flood Risk</td></tr>
+                <tr><td>Software</td><td>Esri ArcGIS Pro 13.3.0</td></tr>
+                <tr><td>Processing Date</td><td>March 21–25, 2025</td></tr>
+                <tr><td>Capstone</td><td>INFT3000 — Cumberland County Flood Risk Assessment</td></tr>
+            </table>
+            <h3>DEM &amp; Elevation Model</h3>
+            <table class="ref-table">
+                <tr><td>DEM Type</td><td>Hydro-conditioned DEM (aboiteaux removed)</td></tr>
+                <tr><td>Resolution</td><td>1.0 m</td></tr>
+                <tr><td>Elevation Range</td><td>&minus;7.20 m to 364.34 m</td></tr>
+                <tr><td>Pixel Depth</td><td>32-bit floating point</td></tr>
+                <tr><td>Compression</td><td>LZW</td></tr>
+                <tr><td>Extent (Lat)</td><td>45.2285&deg; N to 46.0278&deg; N</td></tr>
+                <tr><td>Extent (Lng)</td><td>65.0722&deg; W to 63.1492&deg; W</td></tr>
+            </table>
+            <h3>Coordinate System &amp; Datums</h3>
+            <table class="ref-table">
+                <tr><td>Horizontal CRS</td><td>NAD83(CSRS)v6 UTM Zone 20N (EPSG:22620)</td></tr>
+                <tr><td>Vertical Datum</td><td>CGVD2013</td></tr>
+                <tr><td>Geoid Model</td><td>GRS 1980 Ellipsoid</td></tr>
+                <tr><td>Web Display CRS</td><td>WGS84 (EPSG:4326) via reprojection</td></tr>
+            </table>
+            <h3>Flood Model Parameters</h3>
+            <table class="ref-table">
+                <tr><td>Flood Levels</td><td>0 m to 11 m (0.1 m increments)</td></tr>
+                <tr><td>Regions</td><td>Bay of Fundy (south) + Northumberland Strait (north)</td></tr>
+                <tr><td>Data Format</td><td>COG GeoTIFF rasters</td></tr>
+                <tr><td>Geometry Simplification</td><td>0.00005&deg; tolerance (~5 m)</td></tr>
+            </table>
+            <h3>Ocean Reference Points</h3>
+            <table class="ref-table">
+                <tr><td>Bay of Fundy</td><td>45.2894&deg; N, 64.7745&deg; W</td></tr>
+                <tr><td>Northumberland Strait</td><td>45.8505&deg; N, 63.4087&deg; W</td></tr>
+            </table>
+            <h3>Chart Datum (CD) to CGVD2013 Offsets</h3>
+            <table class="ref-table">
+                <tr><th>Station</th><th>CHS ID</th><th>Offset (m)</th><th>Formula</th></tr>
+                <tr><td>Saint John, NB</td><td>00065</td><td>&minus;4.755</td><td>CGVD2013 = CD &minus; 4.755</td></tr>
+                <tr><td>Pointe-du-Ch&ecirc;ne, NB</td><td>01804</td><td>&minus;1.478</td><td>CGVD2013 = CD &minus; 1.478</td></tr>
+                <tr><td>Charlottetown, PE</td><td>01700</td><td>&minus;2.012</td><td>CGVD2013 = CD &minus; 2.012</td></tr>
+                <tr><td>Caribou, NS</td><td>01640</td><td>&minus;1.757</td><td>CGVD2013 = CD &minus; 1.757</td></tr>
+            </table>
+            <div class="modal-footer-note">
+                <strong>Source:</strong> AGRG LiDAR-derived flood inundation shapefiles via NSCC partnership. Tide data from CHS/DFO-MPO Integrated Water Level System (IWLS) API. CD to CGVD2013 offsets sourced from CHS station benchmarks. All elevations referenced to CGVD2013 to enable direct comparison between observed water levels and land surface elevations.
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- OpenLayers JS -->
+<script src="https://cdn.jsdelivr.net/npm/ol@10.2.1/dist/ol.js"></script>
+<!-- proj4js for projection support -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
+<!-- GeoTIFF.js for COG rendering -->
+<script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
 
 <script>
+// Register UTM Zone 20N projection (NAD83 CSRS v6)
+proj4.defs('EPSG:32620', '+proj=utm +zone=20 +datum=WGS84 +units=m +no_defs');
+ol.proj.proj4.register(proj4);
 // ============================================
-// CUMBERLAND COUNTY FLOOD DASHBOARD
+// CUMBERLAND COUNTY FLOOD DASHBOARD (OpenLayers)
 // ============================================
 
 // ---------- THEME TOGGLE ----------
@@ -112,14 +180,12 @@ setupToggle('toggle-legend', 'legend-content');
 
         backdrop.addEventListener('click', closeSidebar);
 
-        // Close sidebar on Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && sidebar.classList.contains('open')) {
                 closeSidebar();
             }
         });
 
-        // Close sidebar when window resizes above mobile breakpoint
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
                 closeSidebar();
@@ -127,7 +193,6 @@ setupToggle('toggle-legend', 'legend-content');
         });
     }
 
-    // Expose closeSidebar globally so other interactions can use it
     window.closeMobileSidebar = closeSidebar;
 })();
 
@@ -151,89 +216,133 @@ function formatTimestamp(isoStr) {
     } catch (e) { return isoStr; }
 }
 
-// ---------- MAP INITIALIZATION ----------
-var map = L.map('map', {
-    center: [45.75, -64.30],
-    zoom: 10,
-    zoomControl: true,
-    attributionControl: true
+// ---------- MAP INITIALIZATION (OpenLayers) ----------
+var osmBase = new ol.layer.Tile({
+    source: new ol.source.OSM(),
+    visible: true,
+    zIndex: 0
 });
 
-var osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
-
-var topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: '&copy; OpenTopoMap'
+var topoLayer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+        url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        maxZoom: 17,
+        attributions: '&copy; OpenTopoMap'
+    }),
+    visible: false,
+    zIndex: 0
 });
 
-var darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; CARTO'
+var darkLayer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+        url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        maxZoom: 19,
+        attributions: '&copy; CARTO'
+    }),
+    visible: false,
+    zIndex: 0
 });
 
-var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18,
-    attribution: '&copy; Esri'
+var satelliteLayer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 18,
+        attributions: '&copy; Esri'
+    }),
+    visible: false,
+    zIndex: 0
 });
 
-L.control.layers({
-    'Street Map': osmBase,
-    'Topographic': topoLayer,
-    'Satellite': satelliteLayer,
-    'Dark': darkLayer
-}, null, { position: 'topleft' }).addTo(map);
+var baseLayers = [osmBase, topoLayer, darkLayer, satelliteLayer];
+var baseLayerNames = ['Street Map', 'Topographic', 'Satellite', 'Dark'];
 
-L.control.scale({ maxWidth: 200, imperial: false }).addTo(map);
-
-// Cursor position
-document.getElementById('cursor-zoom').textContent = map.getZoom();
-map.on('mousemove', function(e) {
-    document.getElementById('cursor-lat').textContent = e.latlng.lat.toFixed(5);
-    document.getElementById('cursor-lng').textContent = e.latlng.lng.toFixed(5);
-});
-map.on('zoomend', function() {
-    document.getElementById('cursor-zoom').textContent = map.getZoom();
+// Vector layers for roads, infrastructure, tide markers
+var roadsLayer = new ol.layer.Vector({
+    source: new ol.source.Vector(),
+    zIndex: 20
 });
 
-// ---------- LAYER GROUPS ----------
-var floodLayerFundy = L.layerGroup().addTo(map);
-var floodLayerNorth = L.layerGroup().addTo(map);
-var roadsLayer = L.layerGroup().addTo(map);
-var infraLayer = L.layerGroup().addTo(map);
-var tideMarkersLayer = L.layerGroup().addTo(map);
+var infraLayer = new ol.layer.Vector({
+    source: new ol.source.Vector(),
+    zIndex: 25
+});
+
+var tideMarkersLayer = new ol.layer.Vector({
+    source: new ol.source.Vector(),
+    zIndex: 30
+});
+
+var view = new ol.View({
+    center: ol.proj.fromLonLat([-64.30, 45.75]),
+    zoom: 10
+});
+
+var map = new ol.Map({
+    target: 'map',
+    layers: [osmBase, topoLayer, darkLayer, satelliteLayer, roadsLayer, infraLayer, tideMarkersLayer],
+    view: view,
+    controls: ol.control.defaults.defaults().extend([
+        new ol.control.ScaleLine({ units: 'metric' })
+    ])
+});
+
+// Cursor position tracking
+document.getElementById('cursor-zoom').textContent = Math.round(view.getZoom());
+map.on('pointermove', function(evt) {
+    var coords = ol.proj.toLonLat(evt.coordinate);
+    document.getElementById('cursor-lat').textContent = coords[1].toFixed(5);
+    document.getElementById('cursor-lng').textContent = coords[0].toFixed(5);
+});
+view.on('change:resolution', function() {
+    document.getElementById('cursor-zoom').textContent = Math.round(view.getZoom());
+});
+
+// ---------- FLOOD LAYER STATE ----------
+var floodLayerFundy = null;
+var floodLayerNorth = null;
 var userLayers = {};
 var userLayerCounter = 0;
-
-// ---------- FLOOD LAYER CACHE ----------
 var floodCache = {};
 var currentFloodLevel = 0;
 var currentSide = 'both';
 
-// ---------- TIDE STATIONS ----------
+// ---------- TIDE STATIONS (with CGVD2013 offsets) ----------
 var TIDE_STATIONS = [
     {
         id: '5cebf1df3d0f4a073c4bbc24',
         name: 'Saint John, NB',
         lat: 45.2517, lng: -66.0633,
         valueEl: 'tide-value-sj', timeEl: 'tide-time-sj', statusEl: 'tide-status-sj',
-        thresholdElevated: 7.5, thresholdCritical: 8.5
+        canvasEl: 'canvas-sj', chartStartEl: 'chart-start-sj', chartEndEl: 'chart-end-sj',
+        cdOffset: 4.755,
+        thresholdElevated: 3.00, thresholdCritical: 4.00
+    },
+    {
+        id: '64b6e5ec8027cb190816a0c0',
+        name: 'Pointe-du-Ch\u00eane, NB',
+        lat: 46.2406, lng: -64.5300,
+        valueEl: 'tide-value-sh', timeEl: 'tide-time-sh', statusEl: 'tide-status-sh',
+        canvasEl: 'canvas-sh', chartStartEl: 'chart-start-sh', chartEndEl: 'chart-end-sh',
+        cdOffset: 1.478,
+        thresholdElevated: 0.30, thresholdCritical: 0.80
     },
     {
         id: '5cebf1e33d0f4a073c4bc21f',
         name: 'Charlottetown, PE',
         lat: 46.2340, lng: -63.1191,
         valueEl: 'tide-value-ch', timeEl: 'tide-time-ch', statusEl: 'tide-status-ch',
-        thresholdElevated: 2.2, thresholdCritical: 2.8
+        canvasEl: 'canvas-ch', chartStartEl: 'chart-start-ch', chartEndEl: 'chart-end-ch',
+        cdOffset: 2.012,
+        thresholdElevated: 0.50, thresholdCritical: 1.00
     },
     {
         id: '5cebf1e33d0f4a073c4bc20d',
         name: 'Caribou, NS',
         lat: 45.7700, lng: -62.6783,
         valueEl: 'tide-value-cb', timeEl: 'tide-time-cb', statusEl: 'tide-status-cb',
-        thresholdElevated: 2.0, thresholdCritical: 2.6
+        canvasEl: 'canvas-cb', chartStartEl: 'chart-start-cb', chartEndEl: 'chart-end-cb',
+        cdOffset: 1.757,
+        thresholdElevated: 0.30, thresholdCritical: 0.80
     }
 ];
 
@@ -261,14 +370,15 @@ async function fetchTideData(station) {
         }
         if (data && data.length > 0) {
             var latest = data[data.length - 1];
-            var waterLevel = parseFloat(latest.value).toFixed(2);
+            var cdLevel = parseFloat(latest.value);
+            var cgvdLevel = (cdLevel - station.cdOffset).toFixed(2);
             var timestamp = latest.eventDate || latest.timeStamp;
-            valEl.textContent = waterLevel;
+            valEl.textContent = cgvdLevel;
             timeEl.textContent = dataType + ' \u2014 ' + formatTimestamp(timestamp);
             var latencyMs = now.getTime() - new Date(timestamp).getTime();
             var latencyMin = Math.round(latencyMs / 60000);
             document.getElementById('kpi-latency').textContent = latencyMin + 'm';
-            var level = parseFloat(waterLevel);
+            var level = parseFloat(cgvdLevel);
             if (level >= station.thresholdCritical) {
                 statusEl.textContent = 'CRITICAL'; statusEl.className = 'tide-status critical';
             } else if (level >= station.thresholdElevated) {
@@ -287,30 +397,155 @@ async function fetchTideData(station) {
     }
 }
 
+// ---------- 24H TIDE CHART RENDERING ----------
+async function fetchAndRenderChart(station) {
+    var now = new Date();
+    var dayAgo = new Date(now.getTime() - 86400000);
+    var from = dayAgo.toISOString();
+    var to = now.toISOString();
+    var url = 'https://api-iwls.dfo-mpo.gc.ca/api/v1/stations/' + station.id + '/data?time-series-code=wlo&from=' + from + '&to=' + to;
+    try {
+        var response = await fetch(url);
+        if (!response.ok) return;
+        var data = await response.json();
+        if (!data || data.length < 2) return;
+        var canvas = document.getElementById(station.canvasEl);
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var dpr = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        var w = rect.width, h = rect.height;
+        var pad = { top: 6, right: 4, bottom: 6, left: 4 };
+        var values = data.map(function(d) { return parseFloat(d.value) - station.cdOffset; });
+        var minV = Math.min.apply(null, values);
+        var maxV = Math.max.apply(null, values);
+        var range = maxV - minV || 1;
+        minV -= range * 0.1; maxV += range * 0.1; range = maxV - minV;
+        var chartW = w - pad.left - pad.right;
+        var chartH = h - pad.top - pad.bottom;
+        ctx.clearRect(0, 0, w, h);
+        if (minV < 0 && maxV > 0) {
+            var zeroY = pad.top + chartH - ((0 - minV) / range) * chartH;
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#dce1e8';
+            ctx.lineWidth = 0.5; ctx.setLineDash([3, 3]);
+            ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(w - pad.right, zeroY); ctx.stroke(); ctx.setLineDash([]);
+        }
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#1e5a96';
+        ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+        for (var i = 0; i < values.length; i++) {
+            var x = pad.left + (i / (values.length - 1)) * chartW;
+            var y = pad.top + chartH - ((values[i] - minV) / range) * chartH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.lineTo(pad.left + chartW, pad.top + chartH);
+        ctx.lineTo(pad.left, pad.top + chartH);
+        ctx.closePath();
+        var fillColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#1e5a96';
+        ctx.fillStyle = fillColor.replace(')', ', 0.08)').replace('rgb(', 'rgba(');
+        if (ctx.fillStyle === fillColor) ctx.fillStyle = 'rgba(30,90,150,0.08)';
+        ctx.fill();
+        var startEl = document.getElementById(station.chartStartEl);
+        var endEl = document.getElementById(station.chartEndEl);
+        if (startEl) startEl.textContent = dayAgo.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Halifax' });
+        if (endEl) endEl.textContent = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Halifax' });
+    } catch (err) {
+        console.error('Chart fetch error for ' + station.name + ':', err);
+    }
+}
+
 async function refreshAllTides() {
     for (var i = 0; i < TIDE_STATIONS.length; i++) {
         await fetchTideData(TIDE_STATIONS[i]);
     }
+    TIDE_STATIONS.forEach(function(s) { fetchAndRenderChart(s); });
     showToast('Tide data refreshed', 'success');
 }
 
 refreshAllTides();
 setInterval(refreshAllTides, 300000);
 
-// ---------- TIDE MARKERS ----------
-var tideIcon = L.divIcon({
-    html: '<div style="background:#2980b9;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 6px rgba(41,128,185,0.5);"></div>',
-    className: '', iconSize: [12, 12], iconAnchor: [6, 6]
+// ---------- TIDE CHART EXPAND/COLLAPSE ----------
+document.querySelectorAll('.tide-chart-toggle').forEach(function(toggle) {
+    toggle.addEventListener('click', function() {
+        var targetId = this.getAttribute('data-target');
+        var container = document.getElementById(targetId);
+        if (!container) return;
+        var isCollapsed = container.classList.contains('collapsed');
+        container.classList.toggle('collapsed');
+        this.classList.toggle('collapsed');
+        if (isCollapsed) { container.style.maxHeight = container.scrollHeight + 'px'; }
+        else { container.style.maxHeight = '0'; }
+    });
+});
+
+// ---------- REFERENCE DATA MODAL ----------
+(function() {
+    var openBtn = document.getElementById('open-ref-modal');
+    var backdrop = document.getElementById('ref-modal-backdrop');
+    var closeBtn = document.getElementById('close-ref-modal');
+    function openModal() { backdrop.classList.add('visible'); }
+    function closeModal() { backdrop.classList.remove('visible'); }
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && backdrop && backdrop.classList.contains('visible')) closeModal(); });
+})();
+
+// ---------- TIDE MARKERS (OpenLayers) ----------
+var tideMarkerStyle = new ol.style.Style({
+    image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({ color: '#2980b9' }),
+        stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+    })
 });
 
 TIDE_STATIONS.forEach(function(station) {
-    var marker = L.marker([station.lat, station.lng], { icon: tideIcon });
-    marker.bindPopup(
-        '<div class="popup-title">' + station.name + '</div>' +
-        '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">CHS Tidal Gauge</span></div>' +
-        '<div class="popup-row"><span class="popup-label">Coordinates:</span><span class="popup-value">' + station.lat.toFixed(4) + ', ' + station.lng.toFixed(4) + '</span></div>' +
-        '<div class="popup-row"><span class="popup-label">Elevated:</span><span class="popup-value">' + station.thresholdElevated + 'm</span></div>' +
-        '<div class="popup-row"><span class="popup-label">Critical:</span><span class="popup-value">' + station.thresholdCritical + 'm</span></div>'
-    );
-    marker.addTo(tideMarkersLayer);
+    var feature = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([station.lng, station.lat])),
+        name: station.name,
+        stationData: station
+    });
+    feature.setStyle(tideMarkerStyle);
+    tideMarkersLayer.getSource().addFeature(feature);
+});
+
+// ---------- POPUP OVERLAY ----------
+var popupEl = document.createElement('div');
+popupEl.id = 'ol-popup';
+popupEl.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:12px 16px;max-width:280px;font-size:0.78rem;line-height:1.5;';
+document.body.appendChild(popupEl);
+
+var popup = new ol.Overlay({
+    element: popupEl,
+    positioning: 'bottom-center',
+    offset: [0, -12],
+    stopEvent: false
+});
+map.addOverlay(popup);
+
+map.on('click', function(evt) {
+    var feature = map.forEachFeatureAtPixel(evt.pixel, function(f) { return f; });
+    if (feature && feature.get('stationData')) {
+        var s = feature.get('stationData');
+        popupEl.innerHTML =
+            '<div class="popup-title">' + s.name + '</div>' +
+            '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">CHS Tidal Gauge</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Coordinates:</span><span class="popup-value">' + s.lat.toFixed(4) + ', ' + s.lng.toFixed(4) + '</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Elevated:</span><span class="popup-value">' + s.thresholdElevated + 'm</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Critical:</span><span class="popup-value">' + s.thresholdCritical + 'm</span></div>';
+        popup.setPosition(evt.coordinate);
+    } else {
+        popup.setPosition(undefined);
+    }
+});
+
+// Change cursor on hover over features
+map.on('pointermove', function(evt) {
+    var hit = map.hasFeatureAtPixel(evt.pixel);
+    map.getTargetElement().style.cursor = hit ? 'pointer' : '';
 });

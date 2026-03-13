@@ -6,8 +6,8 @@
     <title>Cumberland County Flood Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- OpenLayers CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
     <link rel="stylesheet" href="styles/map.css" />
 </head>
 <body>
@@ -63,7 +63,12 @@
                     <span class="level-label">Water Level</span>
                     <span><span class="level-value" id="flood-level-display">0.0</span><span class="level-unit">m</span></span>
                 </div>
-                <input type="range" class="flood-slider" id="flood-slider" min="0" max="11" step="1" value="0">
+                <div class="level-input-row">
+                    <button class="level-arrow-btn" id="level-down" title="Decrease 0.1m">&#8595;</button>
+                    <input type="number" class="level-text-input" id="flood-level-input" min="0" max="11" step="0.1" value="0.0" />
+                    <button class="level-arrow-btn" id="level-up" title="Increase 0.1m">&#8593;</button>
+                </div>
+                <input type="range" class="flood-slider" id="flood-slider" min="0" max="11" step="0.1" value="0">
                 <div class="slider-ticks">
                     <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span>
                 </div>
@@ -87,31 +92,93 @@
                     <div class="tide-station-name"><span class="station-dot"></span> Saint John, NB (Station 00065)</div>
                     <div class="tide-level-display">
                         <span class="tide-level-value" id="tide-value-sj"><span class="loading-spinner"></span></span>
-                        <span class="tide-level-unit">metres (CD)</span>
+                        <span class="tide-level-unit">metres (CGVD2013)</span>
                     </div>
+                    <div class="tide-offset-note">CD offset: &minus;4.755m</div>
                     <div class="tide-timestamp" id="tide-time-sj">Fetching data...</div>
                     <span class="tide-status normal" id="tide-status-sj">LOADING</span>
                     <div class="tide-refresh-note">Auto-refresh every 5 min</div>
+                    <div class="tide-chart-toggle collapsed" data-target="chart-sj">
+                        <span>24h Water Level Chart</span>
+                        <svg class="chart-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="tide-chart-container collapsed" id="chart-sj">
+                        <canvas class="tide-chart-canvas" id="canvas-sj"></canvas>
+                        <div class="tide-chart-labels"><span id="chart-start-sj">-24h</span><span id="chart-end-sj">Now</span></div>
+                    </div>
+                    <a class="tide-station-link" href="https://tides.gc.ca/en/stations/00065" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        View on tides.gc.ca
+                    </a>
+                </div>
+                <div class="tide-widget" id="tide-shediac">
+                    <div class="tide-station-name"><span class="station-dot"></span> Pointe-du-Ch&ecirc;ne, NB (Station 01804)</div>
+                    <div class="tide-level-display">
+                        <span class="tide-level-value" id="tide-value-sh"><span class="loading-spinner"></span></span>
+                        <span class="tide-level-unit">metres (CGVD2013)</span>
+                    </div>
+                    <div class="tide-offset-note">CD offset: &minus;1.478m</div>
+                    <div class="tide-timestamp" id="tide-time-sh">Fetching data...</div>
+                    <span class="tide-status normal" id="tide-status-sh">LOADING</span>
+                    <div class="tide-refresh-note">Auto-refresh every 5 min</div>
+                    <div class="tide-chart-toggle collapsed" data-target="chart-sh">
+                        <span>24h Water Level Chart</span>
+                        <svg class="chart-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="tide-chart-container collapsed" id="chart-sh">
+                        <canvas class="tide-chart-canvas" id="canvas-sh"></canvas>
+                        <div class="tide-chart-labels"><span id="chart-start-sh">-24h</span><span id="chart-end-sh">Now</span></div>
+                    </div>
+                    <a class="tide-station-link" href="https://tides.gc.ca/en/stations/01804" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        View on tides.gc.ca
+                    </a>
                 </div>
                 <div class="tide-widget" id="tide-charlottetown">
-                    <div class="tide-station-name"><span class="station-dot"></span> Charlottetown, PE (Station 00612)</div>
+                    <div class="tide-station-name"><span class="station-dot"></span> Charlottetown, PE (Station 01700)</div>
                     <div class="tide-level-display">
                         <span class="tide-level-value" id="tide-value-ch"><span class="loading-spinner"></span></span>
-                        <span class="tide-level-unit">metres (CD)</span>
+                        <span class="tide-level-unit">metres (CGVD2013)</span>
                     </div>
+                    <div class="tide-offset-note">CD offset: &minus;2.012m</div>
                     <div class="tide-timestamp" id="tide-time-ch">Fetching data...</div>
                     <span class="tide-status normal" id="tide-status-ch">LOADING</span>
                     <div class="tide-refresh-note">Auto-refresh every 5 min</div>
+                    <div class="tide-chart-toggle collapsed" data-target="chart-ch">
+                        <span>24h Water Level Chart</span>
+                        <svg class="chart-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="tide-chart-container collapsed" id="chart-ch">
+                        <canvas class="tide-chart-canvas" id="canvas-ch"></canvas>
+                        <div class="tide-chart-labels"><span id="chart-start-ch">-24h</span><span id="chart-end-ch">Now</span></div>
+                    </div>
+                    <a class="tide-station-link" href="https://tides.gc.ca/en/stations/01700" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        View on tides.gc.ca
+                    </a>
                 </div>
                 <div class="tide-widget" id="tide-caribou">
-                    <div class="tide-station-name"><span class="station-dot"></span> Caribou, NS (Station 00490)</div>
+                    <div class="tide-station-name"><span class="station-dot"></span> Caribou, NS (Station 01640)</div>
                     <div class="tide-level-display">
                         <span class="tide-level-value" id="tide-value-cb"><span class="loading-spinner"></span></span>
-                        <span class="tide-level-unit">metres (CD)</span>
+                        <span class="tide-level-unit">metres (CGVD2013)</span>
                     </div>
+                    <div class="tide-offset-note">CD offset: &minus;1.757m</div>
                     <div class="tide-timestamp" id="tide-time-cb">Fetching data...</div>
                     <span class="tide-status normal" id="tide-status-cb">LOADING</span>
                     <div class="tide-refresh-note">Auto-refresh every 5 min</div>
+                    <div class="tide-chart-toggle collapsed" data-target="chart-cb">
+                        <span>24h Water Level Chart</span>
+                        <svg class="chart-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="tide-chart-container collapsed" id="chart-cb">
+                        <canvas class="tide-chart-canvas" id="canvas-cb"></canvas>
+                        <div class="tide-chart-labels"><span id="chart-start-cb">-24h</span><span id="chart-end-cb">Now</span></div>
+                    </div>
+                    <a class="tide-station-link" href="https://tides.gc.ca/en/stations/01640" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        View on tides.gc.ca
+                    </a>
                 </div>
             </div>
         </div>

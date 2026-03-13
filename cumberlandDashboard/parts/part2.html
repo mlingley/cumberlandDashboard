@@ -7,7 +7,7 @@
             </div>
             <div class="kpi-cards">
                 <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-stations">3</div>
+                    <div class="kpi-value" id="kpi-stations">4</div>
                     <div class="kpi-label">Tide Stations</div>
                 </div>
                 <div class="kpi-card">
@@ -115,10 +115,23 @@
             <div class="user-layers-list" id="user-layers-list"></div>
         </div>
 
+        <!-- Reference Data -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <h2>Reference Data</h2>
+            </div>
+            <button class="ref-data-btn" id="open-ref-modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                AGRG Project Metadata &amp; Datum Reference
+            </button>
+        </div>
+
         <!-- Footer -->
         <div class="sidebar-footer">
             <strong>Data Sources:</strong> CHS/DFO-MPO (Tides), OpenStreetMap (Roads &amp; Infrastructure), LiDAR-derived flood inundation models.<br>
             <strong>Project:</strong> INFT3000 Capstone &mdash; Cumberland County Flood Risk Assessment.<br>
+            <strong>Vertical Datum:</strong> CGVD2013 (converted from Chart Datum via station offsets)<br>
             <strong>Projection:</strong> NAD83(CSRS)v6 UTM Zone 20N &rarr; WGS84
         </div>
     </aside>

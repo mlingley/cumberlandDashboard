@@ -1,17 +1,17 @@
 
-// ---------- SIDEBAR LAYER TOGGLES ----------
+// ---------- SIDEBAR LAYER TOGGLES (OpenLayers) ----------
 document.getElementById('layer-flood').addEventListener('change', function(e) {
-    if (e.target.checked) { map.addLayer(floodLayerFundy); map.addLayer(floodLayerNorth); }
-    else { map.removeLayer(floodLayerFundy); map.removeLayer(floodLayerNorth); }
+    if (floodLayerFundy) floodLayerFundy.setVisible(e.target.checked);
+    if (floodLayerNorth) floodLayerNorth.setVisible(e.target.checked);
 });
 document.getElementById('layer-roads').addEventListener('change', function(e) {
-    if (e.target.checked) map.addLayer(roadsLayer); else map.removeLayer(roadsLayer);
+    roadsLayer.setVisible(e.target.checked);
 });
 document.getElementById('layer-infra').addEventListener('change', function(e) {
-    if (e.target.checked) map.addLayer(infraLayer); else map.removeLayer(infraLayer);
+    infraLayer.setVisible(e.target.checked);
 });
 document.getElementById('layer-tides').addEventListener('change', function(e) {
-    if (e.target.checked) map.addLayer(tideMarkersLayer); else map.removeLayer(tideMarkersLayer);
+    tideMarkersLayer.setVisible(e.target.checked);
 });
 
 // ---------- FILE UPLOAD ----------
@@ -56,26 +56,29 @@ function processUploadedFile(file) {
 
 function addUserGeoJSONLayer(name, geoData) {
     var layerId = 'user-layer-' + (++userLayerCounter);
-    var layer = L.geoJSON(geoData, {
-        style: { fillColor: '#8b5cf6', fillOpacity: 0.3, color: '#6d28d9', weight: 2 },
-        pointToLayer: function(feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: 6, fillColor: '#8b5cf6', color: '#6d28d9', weight: 2, fillOpacity: 0.7
-            });
-        },
-        onEachFeature: function(feature, layer) {
-            if (feature.properties) {
-                var html = '<div class="popup-title">Custom Layer Feature</div>';
-                for (var key in feature.properties) {
-                    html += '<div class="popup-row"><span class="popup-label">' + key + ':</span><span class="popup-value">' + feature.properties[key] + '</span></div>';
-                }
-                layer.bindPopup(html);
-            }
-        }
-    }).addTo(map);
+    var fmt = new ol.format.GeoJSON();
+    var features = fmt.readFeatures(geoData, { featureProjection: 'EPSG:3857' });
+    var vectorSource = new ol.source.Vector({ features: features });
+    var layer = new ol.layer.Vector({
+        source: vectorSource,
+        style: new ol.style.Style({
+            fill: new ol.style.Fill({ color: 'rgba(139,92,246,0.3)' }),
+            stroke: new ol.style.Stroke({ color: '#6d28d9', width: 2 }),
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({ color: '#8b5cf6' }),
+                stroke: new ol.style.Stroke({ color: '#6d28d9', width: 2 })
+            })
+        }),
+        zIndex: 30
+    });
+    map.addLayer(layer);
     userLayers[layerId] = layer;
     addUserLayerUI(layerId, name);
-    map.fitBounds(layer.getBounds(), { padding: [30, 30] });
+    var extent = vectorSource.getExtent();
+    if (extent && isFinite(extent[0])) {
+        view.fit(extent, { padding: [30, 30, 30, 30], maxZoom: 16 });
+    }
     showToast('Layer loaded: ' + name, 'success');
 }
 
@@ -89,28 +92,34 @@ function addUserCSVLayer(name, csvText) {
         showToast('CSV must have Lat and Lng columns', 'error'); return;
     }
     var layerId = 'user-layer-' + (++userLayerCounter);
-    var layerGroup = L.layerGroup();
+    var vectorSource = new ol.source.Vector();
     var count = 0;
     for (var i = 1; i < lines.length; i++) {
         var cols = lines[i].split(',').map(function(c) { return c.trim(); });
         var lat = parseFloat(cols[latIdx]);
         var lng = parseFloat(cols[lngIdx]);
         if (!isNaN(lat) && !isNaN(lng)) {
-            var marker = L.circleMarker([lat, lng], {
-                radius: 5, fillColor: '#8b5cf6', color: '#6d28d9', weight: 2, fillOpacity: 0.7
+            var feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([lng, lat]))
             });
-            var popupHtml = '<div class="popup-title">CSV Row ' + i + '</div>';
-            headers.forEach(function(h, idx) {
-                popupHtml += '<div class="popup-row"><span class="popup-label">' + h + ':</span><span class="popup-value">' + (cols[idx] || '') + '</span></div>';
-            });
-            marker.bindPopup(popupHtml);
-            marker.addTo(layerGroup);
+            vectorSource.addFeature(feature);
             count++;
         }
     }
     if (count === 0) { showToast('No valid coordinates in CSV', 'error'); return; }
-    layerGroup.addTo(map);
-    userLayers[layerId] = layerGroup;
+    var layer = new ol.layer.Vector({
+        source: vectorSource,
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 5,
+                fill: new ol.style.Fill({ color: '#8b5cf6' }),
+                stroke: new ol.style.Stroke({ color: '#6d28d9', width: 2 })
+            })
+        }),
+        zIndex: 30
+    });
+    map.addLayer(layer);
+    userLayers[layerId] = layer;
     addUserLayerUI(layerId, name + ' (' + count + ' pts)');
     showToast('CSV loaded: ' + count + ' points', 'success');
 }
@@ -135,25 +144,24 @@ function addUserLayerUI(layerId, name) {
 updateFloodDisplay(0);
 
 // ---------- MAP RESIZE ON SIDEBAR TOGGLE ----------
-// Leaflet needs invalidateSize when layout changes
+// OpenLayers handles resize automatically via updateSize()
 (function() {
     var sidebar = document.getElementById('sidebar');
     if (sidebar) {
         var observer = new MutationObserver(function() {
-            setTimeout(function() { map.invalidateSize(); }, 350);
+            setTimeout(function() { map.updateSize(); }, 350);
         });
         observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
     }
-    // Also handle window resize
     window.addEventListener('resize', function() {
-        map.invalidateSize();
+        map.updateSize();
     });
 })();
 
-console.log('Cumberland County Flood Dashboard initialized');
+console.log('Cumberland County Flood Dashboard initialized (OpenLayers + COG TIFF)');
 console.log('Tide stations: Saint John, Charlottetown, Caribou');
-console.log('Flood data: FundySide + NorthSide (0-11m, 1m increments)');
-console.log('Roads & Infrastructure: OpenStreetMap');
+console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via COG TIFF)');
+console.log('Roads & Infrastructure: OpenStreetMap GeoJSON');
 
 </script>
 </body>

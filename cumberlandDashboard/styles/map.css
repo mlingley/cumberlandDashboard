@@ -293,10 +293,73 @@ html, body {
     cursor: pointer;
 }
 
+/* Level input row with text box and arrows */
+.level-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.level-text-input {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+
+.level-text-input::-webkit-inner-spin-button,
+.level-text-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.level-text-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(30, 90, 150, 0.15);
+}
+
+.level-arrow-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+.level-arrow-btn:hover {
+    background: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+}
+
+.level-arrow-btn:active {
+    transform: scale(0.95);
+}
+
 .slider-ticks {
     display: flex;
     justify-content: space-between;
-    padding: 0 2px;
+    padding: 0 10px;
     margin-top: 4px;
 }
 
@@ -304,6 +367,9 @@ html, body {
     font-size: 0.6rem;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+    text-align: center;
+    width: 0;
+    overflow: visible;
 }
 
 .slider-side-toggle {
@@ -424,6 +490,261 @@ html, body {
     font-size: 0.62rem;
     color: var(--text-muted);
     margin-top: 6px;
+}
+
+/* ---------- Tide Chart (Expand/Collapse) ---------- */
+.tide-chart-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-light);
+    cursor: pointer;
+    user-select: none;
+}
+
+.tide-chart-toggle span {
+    font-size: 0.65rem;
+    color: var(--accent-secondary);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.tide-chart-toggle .chart-chevron {
+    width: 12px;
+    height: 12px;
+    color: var(--accent-secondary);
+    transition: transform 0.2s;
+}
+
+.tide-chart-toggle.collapsed .chart-chevron {
+    transform: rotate(-90deg);
+}
+
+.tide-chart-container {
+    margin-top: 8px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.tide-chart-container.collapsed {
+    max-height: 0 !important;
+    margin-top: 0;
+}
+
+.tide-chart-canvas {
+    width: 100%;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+}
+
+.tide-chart-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3px;
+}
+
+.tide-chart-labels span {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+}
+
+.tide-station-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 0.62rem;
+    color: var(--accent-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+.tide-station-link:hover {
+    color: var(--accent-primary);
+    text-decoration: underline;
+}
+
+.tide-station-link svg {
+    width: 10px;
+    height: 10px;
+}
+
+.tide-offset-note {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}
+
+/* ---------- Reference Data Modal ---------- */
+.ref-data-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--accent-secondary);
+    font-size: 0.73rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.ref-data-btn:hover {
+    background: var(--bg-input);
+    border-color: var(--accent-secondary);
+}
+
+.ref-data-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-backdrop.visible {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.2s ease;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 1;
+}
+
+.modal-header h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.modal-close svg {
+    width: 18px;
+    height: 18px;
+}
+
+.modal-body {
+    padding: 18px 22px;
+}
+
+.modal-body h3 {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+    margin-top: 18px;
+}
+
+.modal-body h3:first-child {
+    margin-top: 0;
+}
+
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+}
+
+.ref-table th,
+.ref-table td {
+    padding: 7px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.ref-table th {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-tertiary);
+}
+
+.ref-table td {
+    color: var(--text-primary);
+}
+
+.ref-table td:first-child {
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.ref-table tr:last-child td {
+    border-bottom: none;
+}
+
+.modal-footer-note {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 8px;
 }
 
 /* ---------- KPI Cards ---------- */
@@ -1114,6 +1435,55 @@ html, body {
 
     .leaflet-control-zoom {
         margin-top: 60px !important;
+    }
+
+    /* Modal responsive */
+    .modal-backdrop {
+        padding: 10px;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        border-radius: var(--radius-md);
+    }
+
+    .modal-header {
+        padding: 14px 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 0.85rem;
+    }
+
+    .modal-body {
+        padding: 14px 16px;
+    }
+
+    .ref-table {
+        font-size: 0.68rem;
+    }
+
+    .ref-table th,
+    .ref-table td {
+        padding: 6px 8px;
+    }
+
+    .ref-table td:first-child {
+        white-space: normal;
+    }
+
+    /* Tide chart responsive */
+    .tide-chart-canvas {
+        height: 70px;
+    }
+
+    .tide-chart-toggle {
+        min-height: 32px;
+    }
+
+    .tide-station-link {
+        min-height: 28px;
+        font-size: 0.65rem;
     }
 }
 

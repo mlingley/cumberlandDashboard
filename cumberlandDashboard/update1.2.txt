@@ -1,0 +1,49 @@
+e-mail feedback from stakeholder: I checked out the dashboard and note we still don’t have the shediac tide
+
+gauge linked. Also rather than just reporting the current water level
+
+observed in CD -chart datum. I would rather go to the site to see the
+
+actual graph of water levels. We can provide offset values to convert
+
+water levels from CD to CGVD2013. 
+
+1. "We still don’t have the shediac tide gauge linked"
+
+    What it means: There is a specific physical water-level monitoring station (a tide gauge) operated in Shediac, New Brunswick.
+
+    Action required: The stakeholder wants a pin on your map or a widget on your dashboard that connects to the data feed from this specific Shediac station, likely drawing from Fisheries and Oceans Canada (DFO) or a local sensor network.
+
+2. "Rather than just reporting the current water level observed... I would rather go to the site to see the actual graph"
+
+    What it means: Right now, your dashboard is probably displaying a single number (e.g., "Current Water Level: 1.5m"). A single number doesn't tell a user if the tide is currently coming in, going out, or how close it is to the peak of a storm surge.
+
+    Action required: They want the UI changed. Instead of just a static number, they want you to embed a time-series line graph showing the water levels over the last 24–48 hours and the predicted levels for the near future. Alternatively, they at least want a clickable link on your dashboard that takes the user directly to the official government web page where that graph is hosted.
+
+3. "Convert water levels from CD to CGVD2013 using offset values"
+
+    What it means: This is the most critical technical piece of the feedback.
+
+        CD (Chart Datum): This is the reference elevation used by sailors. It is roughly the lowest the tide ever gets. Water depth is measured up from this line so boats don't run aground.
+
+        CGVD2013 (Canadian Geodetic Vertical Datum of 2013): This is the official reference elevation for land in Canada (essentially, modern sea level). Topographic maps and land elevations are measured using this.
+
+        The Problem: If your dashboard says the water is at "3.5 meters CD," you cannot easily compare that to a road that is "2.0 meters CGVD2013" to know if the road is flooded.
+
+    Action required: The stakeholder is offering you a simple mathematical number (the "offset"). For example, if the offset is -0.8m, you would program your app to take the incoming CD water level, subtract 0.8, and display the result as "Water Level (CGVD2013)". This allows users to directly compare water levels to land elevations.
+
+4. "Build an interface to reports and storm surge and total water level return periods."
+
+    What it means:
+
+        Total Water Level: The combination of the normal tide + the storm surge (water pushed ashore by wind/pressure) + wave run-up.
+
+        Return Periods: This is a statistical measurement of risk. You have likely heard of a "1-in-100 year flood." That is a return period.
+
+        Reports: The engineers/scientists likely have detailed PDF reports explaining the flood risks.
+
+    Action required: The stakeholder wants a new section or UI element (like a dropdown menu, sidebar, or modal) on the dashboard where users can:
+
+        Read or download the engineering/scientific reports.
+
+        Select different risk scenarios to view on the map. For example, a toggle switch that says "Show 10-Year Storm Surge," "Show 50-Year Storm Surge," or "Show 100-Year Total Water Level," which would then load the corresponding flood map layers on your dashboard.
