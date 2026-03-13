@@ -183,6 +183,7 @@
             </div>
         </div>
 
+
         <!-- KPIs -->
         <div class="sidebar-section">
             <div class="section-header">
@@ -319,6 +320,7 @@
             <strong>Projection:</strong> NAD83(CSRS)v6 UTM Zone 20N &rarr; WGS84
         </div>
     </aside>
+
 
     <!-- MAP AREA -->
     <div class="map-area">
@@ -856,6 +858,46 @@ map.on('click', function(evt) {
             '<div class="popup-row"><span class="popup-label">Elevated:</span><span class="popup-value">' + s.thresholdElevated + 'm</span></div>' +
             '<div class="popup-row"><span class="popup-label">Critical:</span><span class="popup-value">' + s.thresholdCritical + 'm</span></div>';
         popup.setPosition(evt.coordinate);
+    } else if (feature && feature.get('infraType')) {
+        // Infrastructure feature popup
+        var amenity = feature.get('infraType') || 'Unknown';
+        var name = feature.get('name') || amenity.replace(/_/g, ' ');
+        var riskM = feature.get('flood_risk_m');
+        var riskSide = feature.get('flood_risk_side');
+        var coords = ol.proj.toLonLat(feature.getGeometry().getCoordinates());
+
+        // Amenity type labels
+        var typeLabels = {
+            'fire_station': 'Fire Station',
+            'community_centre': 'Community Centre',
+            'townhall': 'Town Hall',
+            'police': 'Police Station',
+            'hospital': 'Hospital',
+            'clinic': 'Health Clinic',
+            'doctors': 'Medical Office'
+        };
+        var typeLabel = typeLabels[amenity] || amenity.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+
+        // Risk badge
+        var riskHtml;
+        if (riskM !== null && riskM !== undefined) {
+            var riskColor = riskM <= 3 ? '#e74c3c' : riskM <= 7 ? '#f39c12' : '#3498db';
+            var sideLabel = riskSide === 'fundy' ? 'Bay of Fundy' : riskSide === 'north' ? 'Northumberland Strait' : '';
+            riskHtml =
+                '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:' + riskColor + '15;border:1px solid ' + riskColor + '40;">' +
+                '<span style="font-weight:600;color:' + riskColor + ';">⚠ Flood Risk at ' + riskM.toFixed(1) + 'm</span>' +
+                (sideLabel ? '<br><span style="font-size:0.72rem;color:var(--text-secondary);">' + sideLabel + ' side</span>' : '') +
+                '</div>';
+        } else {
+            riskHtml = '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);"><span style="font-weight:600;color:#27ae60;">✓ Safe within modeled range (0–15m)</span></div>';
+        }
+
+        popupEl.innerHTML =
+            '<div class="popup-title">' + name + '</div>' +
+            '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">' + typeLabel + '</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Coordinates:</span><span class="popup-value">' + coords[1].toFixed(4) + ', ' + coords[0].toFixed(4) + '</span></div>' +
+            riskHtml;
+        popup.setPosition(evt.coordinate);
     } else {
         popup.setPosition(undefined);
     }
@@ -866,6 +908,7 @@ map.on('pointermove', function(evt) {
     var hit = map.hasFeatureAtPixel(evt.pixel);
     map.getTargetElement().style.cursor = hit ? 'pointer' : '';
 });
+
 
 // ---------- FLOOD SLIDER LOGIC (XYZ Pre-rendered Tiles) ----------
 var FLOOD_MIN = 0;
@@ -1026,9 +1069,18 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
         var count = 0;
         features.forEach(function(f) {
             var amenity = f.get('amenity') || f.get('healthcare') || f.get('emergency') || '';
+            f.set('infraType', amenity);
+            // Preserve flood risk data from pre-computed geojson
+            var riskM = f.get('flood_risk_m');
+            var riskSide = f.get('flood_risk_side');
+            if (riskM !== undefined) f.set('flood_risk_m', riskM);
+            if (riskSide !== undefined) f.set('flood_risk_side', riskSide);
             var s = getInfraStyle(amenity);
+            // Color at-risk facilities with a warning ring
+            var strokeColor = (riskM !== null && riskM !== undefined) ? '#e74c3c' : '#fff';
+            var strokeWidth = (riskM !== null && riskM !== undefined) ? 2.5 : 2;
             f.setStyle(new ol.style.Style({
-                image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: s.color }), stroke: new ol.style.Stroke({ color: '#fff', width: 2 }) })
+                image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: s.color }), stroke: new ol.style.Stroke({ color: strokeColor, width: strokeWidth }) })
             }));
             count++;
         });
@@ -1037,6 +1089,7 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
         showToast('Infrastructure loaded (' + count + ' facilities)', 'info');
     })
     .catch(function(err) { console.error('Infrastructure error:', err); });
+
 
 // ---------- SIDEBAR LAYER TOGGLES (OpenLayers) ----------
 document.getElementById('layer-flood').addEventListener('change', function(e) {

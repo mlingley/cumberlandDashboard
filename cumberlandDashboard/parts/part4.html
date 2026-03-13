@@ -158,9 +158,18 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
         var count = 0;
         features.forEach(function(f) {
             var amenity = f.get('amenity') || f.get('healthcare') || f.get('emergency') || '';
+            f.set('infraType', amenity);
+            // Preserve flood risk data from pre-computed geojson
+            var riskM = f.get('flood_risk_m');
+            var riskSide = f.get('flood_risk_side');
+            if (riskM !== undefined) f.set('flood_risk_m', riskM);
+            if (riskSide !== undefined) f.set('flood_risk_side', riskSide);
             var s = getInfraStyle(amenity);
+            // Color at-risk facilities with a warning ring
+            var strokeColor = (riskM !== null && riskM !== undefined) ? '#e74c3c' : '#fff';
+            var strokeWidth = (riskM !== null && riskM !== undefined) ? 2.5 : 2;
             f.setStyle(new ol.style.Style({
-                image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: s.color }), stroke: new ol.style.Stroke({ color: '#fff', width: 2 }) })
+                image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: s.color }), stroke: new ol.style.Stroke({ color: strokeColor, width: strokeWidth }) })
             }));
             count++;
         });
