@@ -86,6 +86,23 @@
     </div>
 </div>
 
+<!-- Video Player Modal -->
+<div class="modal-backdrop" id="video-modal-backdrop">
+    <div class="modal-content video-modal-content" role="dialog" aria-labelledby="video-modal-title" aria-modal="true">
+        <div class="modal-header">
+            <h2 id="video-modal-title">Video Model</h2>
+            <button class="modal-close" id="close-video-modal" aria-label="Close modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body video-modal-body">
+            <video id="video-player" controls style="width:100%;max-height:70vh;border-radius:8px;background:#000;">
+                Your browser does not support the video element.
+            </video>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -141,6 +158,7 @@ function setupToggle(headerId, contentId) {
 }
 setupToggle('toggle-tides', 'tides-content');
 setupToggle('toggle-legend', 'legend-content');
+setupToggle('toggle-reports', 'reports-content');
 
 // ---------- MOBILE SIDEBAR TOGGLE ----------
 (function() {
@@ -491,6 +509,140 @@ document.querySelectorAll('.tide-chart-toggle').forEach(function(toggle) {
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && backdrop && backdrop.classList.contains('visible')) closeModal(); });
 })();
 
+// ---------- VIDEO MODAL ----------
+function openVideoModal(el) {
+    var videoSrc = el.getAttribute('data-video');
+    var title = el.querySelector('.report-title').textContent;
+    var backdrop = document.getElementById('video-modal-backdrop');
+    var player = document.getElementById('video-player');
+    var titleEl = document.getElementById('video-modal-title');
+    titleEl.textContent = title;
+    player.src = videoSrc;
+    backdrop.classList.add('visible');
+    player.play().catch(function() {});
+}
+
+(function() {
+    var backdrop = document.getElementById('video-modal-backdrop');
+    var closeBtn = document.getElementById('close-video-modal');
+    var player = document.getElementById('video-player');
+    function closeVideoModal() {
+        backdrop.classList.remove('visible');
+        player.pause();
+        player.src = '';
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeVideoModal);
+    if (backdrop) backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeVideoModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && backdrop && backdrop.classList.contains('visible')) closeVideoModal(); });
+})();
+
+// ---------- REPORTS & MODELS DATA (location associations) ----------
+var REPORTS_AND_MODELS = [
+    {
+        title: 'ACAS Oxford & Pt. Howe Assessment',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/ACAS_Oxford_Pt_Howe_March_2012.pdf',
+        locations: [[-63.87, 45.73], [-64.05, 45.97]],
+        radius: 0.15
+    },
+    {
+        title: 'ACAS Flood Risk Mapping (Final Report)',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/Final_ACAS_Report_2012_TW_flood_risk_mapping_Revised_June17_12_.pdf',
+        locations: [[-64.20, 45.83], [-64.30, 45.75]],
+        radius: 0.25
+    },
+    {
+        title: 'AGRG/NSTIR Chignecto Isthmus Study',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/AGRG_NSTIR_Chignecto Isthmus_Dec2012_full_resolution.pdf',
+        locations: [[-64.20, 45.85], [-64.05, 45.97]],
+        radius: 0.20
+    },
+    {
+        title: 'CLIMAtlantic Coastal Flood Maps',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/AGRG-CLIMAtlantic_Coastal_Flood_Maps_Atlantic_Canada.pdf',
+        locations: [[-64.30, 45.75]],
+        radius: 0.50
+    },
+    {
+        title: 'Nappan & Oxford Tidal/Wave Analysis',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/Nappan_Oxford_TW_LowRes.pdf',
+        locations: [[-64.24, 45.77], [-63.87, 45.73]],
+        radius: 0.15
+    },
+    {
+        title: 'Oxford Nearshore HD Modelling',
+        type: 'pdf',
+        file: 'assets/reportsAndModels/Oxford_Nearshore_HD_Modelling_2012_AGRG_Report.pdf',
+        locations: [[-63.87, 45.73]],
+        radius: 0.12
+    },
+    {
+        title: 'Chignecto Isthmus Saxby Gale Simulation',
+        type: 'video',
+        file: 'assets/reportsAndModels/Chignecto_Isthmus_2012_Saxby_GFale_Sim.mp4',
+        locations: [[-64.20, 45.85], [-64.05, 45.97], [-64.37, 45.89]],
+        radius: 0.20
+    },
+    {
+        title: 'Combined Events Model',
+        type: 'video',
+        file: 'assets/reportsAndModels/Combined_events_model.mp4',
+        locations: [[-64.20, 45.85], [-64.30, 45.75]],
+        radius: 0.25
+    },
+    {
+        title: 'December 2010 Storm Surge',
+        type: 'video',
+        file: 'assets/reportsAndModels/December_2010_Storm_Surge.mp4',
+        locations: [[-64.20, 45.85], [-64.30, 45.75]],
+        radius: 0.30
+    },
+    {
+        title: 'September 1999 Rainfall Event',
+        type: 'video',
+        file: 'assets/reportsAndModels/September_1999_Rainfall.mp4',
+        locations: [[-64.30, 45.75]],
+        radius: 0.40
+    }
+];
+
+function findNearbyReports(lng, lat) {
+    var results = [];
+    for (var i = 0; i < REPORTS_AND_MODELS.length; i++) {
+        var r = REPORTS_AND_MODELS[i];
+        for (var j = 0; j < r.locations.length; j++) {
+            var dx = lng - r.locations[j][0];
+            var dy = lat - r.locations[j][1];
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= r.radius) {
+                results.push(r);
+                break;
+            }
+        }
+    }
+    return results;
+}
+
+function buildReportsPopupHtml(reports) {
+    if (reports.length === 0) return '';
+    var html = '<div style="margin-top:8px;padding:6px 0;border-top:1px solid var(--border-color);">' +
+        '<div style="font-weight:600;font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;">📄 Related Reports & Models</div>';
+    for (var i = 0; i < reports.length; i++) {
+        var r = reports[i];
+        if (r.type === 'pdf') {
+            html += '<a href="' + r.file + '" target="_blank" rel="noopener noreferrer" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">📑 ' + r.title + '</a>';
+        } else {
+            html += '<a href="#" onclick="openVideoModal(this);return false;" data-video="' + r.file + '" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'"><span class="report-title" style="display:none;">' + r.title + '</span>🎬 ' + r.title + '</a>';
+        }
+    }
+    html += '</div>';
+    return html;
+}
+
 // ---------- TIDE MARKERS (OpenLayers) ----------
 var tideMarkerStyle = new ol.style.Style({
     image: new ol.style.Circle({
@@ -569,11 +721,15 @@ map.on('click', function(evt) {
             riskHtml = '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);"><span style="font-weight:600;color:#27ae60;">✓ Safe within modeled range (0–15m)</span></div>';
         }
 
+        // Find nearby reports for this infrastructure point
+        var nearbyReports = findNearbyReports(coords[0], coords[1]);
+        var reportsHtml = buildReportsPopupHtml(nearbyReports);
+
         popupEl.innerHTML =
             '<div class="popup-title">' + name + '</div>' +
             '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">' + typeLabel + '</span></div>' +
             '<div class="popup-row"><span class="popup-label">Coordinates:</span><span class="popup-value">' + coords[1].toFixed(4) + ', ' + coords[0].toFixed(4) + '</span></div>' +
-            riskHtml;
+            riskHtml + reportsHtml;
         popup.setPosition(evt.coordinate);
     } else {
         popup.setPosition(undefined);

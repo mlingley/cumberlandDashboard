@@ -1,2 +1,18 @@
 # Files too large for GitHub LFS (>2GB limit)
 cumberlandDashboard/assets/_BaseLayer/Cumber_HydroDEM_NoAboiteau.tif.ovr
+
+# Massive raster datasets (>2GB each, exceed LFS limits)
+cumberlandDashboard/newData/FloodDepth_NW_Clipped/**/*.tif
+cumberlandDashboard/newData/FloodDepth_NW_Clipped/**/*.tif.ovr
+
+# Large shapefile source data (78-97MB each, raw reference only)
+cumberlandDashboard/newData/FloodOut_NW_Clipped/**/*.shp
+
+# Excel data files (not used by web application)
+cumberlandDashboard/newData/*.xlsx
+
+# Project documents (not web assets)
+cumberlandDashboard/*.docx
+
+# Video source files (WMV originals — MP4 conversions in assets/)
+cumberlandDashboard/newData/reportsAndModels/*.wmv
