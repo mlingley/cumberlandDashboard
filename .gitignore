@@ -23,9 +23,8 @@ cumberlandDashboard/newData/Cumber_HydroDEM_NoAboiteau_CSRp_1m_Clipped_COGTiff.t
 # Reprojected surge COGs (generated locally, too large for git)
 cumberlandDashboard/assets/cog_3857/surge/*.tif
 
-# Generated surge XYZ tiles (thousands of PNGs, regenerate locally)
-cumberlandDashboard/assets/tiles/surge/
-cumberlandDashboard/assets/tiles/surge_extent/
+# Surge XYZ tiles (committed to git — needed for live site)
+# Can be regenerated locally via generate_surge_tiles.py + generate_extent_tiles.py
 
 # Python bytecode
 __pycache__/
