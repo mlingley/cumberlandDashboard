@@ -4,6 +4,9 @@ document.getElementById('layer-flood').addEventListener('change', function(e) {
     if (activeFundyLayer) activeFundyLayer.setVisible(e.target.checked);
     if (activeNorthLayer) activeNorthLayer.setVisible(e.target.checked);
 });
+document.getElementById('layer-surge').addEventListener('change', function(e) {
+    if (activeSurgeLayer) activeSurgeLayer.setVisible(e.target.checked);
+});
 document.getElementById('layer-roads').addEventListener('change', function(e) {
     roadsLayer.setVisible(e.target.checked);
 });
@@ -12,6 +15,7 @@ document.getElementById('layer-infra').addEventListener('change', function(e) {
 });
 document.getElementById('layer-tides').addEventListener('change', function(e) {
     tideMarkersLayer.setVisible(e.target.checked);
+    agrgMarkersLayer.setVisible(e.target.checked);
 });
 
 // ---------- FILE UPLOAD ----------
@@ -144,7 +148,6 @@ function addUserLayerUI(layerId, name) {
 updateFloodDisplay(0);
 
 // ---------- MAP RESIZE ON SIDEBAR TOGGLE ----------
-// OpenLayers handles resize automatically via updateSize()
 (function() {
     var sidebar = document.getElementById('sidebar');
     if (sidebar) {
@@ -158,10 +161,12 @@ updateFloodDisplay(0);
     });
 })();
 
-console.log('Cumberland County Flood Dashboard initialized (OpenLayers + XYZ Tiles)');
-console.log('Tide stations: Saint John, Pointe-du-Chêne, Charlottetown, Caribou');
-console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via pre-rendered XYZ tiles)');
-console.log('Roads & Infrastructure: OpenStreetMap GeoJSON');
+console.log('Cumberland County Flood Dashboard v1.3 initialized (OpenLayers + XYZ Tiles)');
+console.log('CHS tide stations: Saint John, Pointe-du-Chene, Charlottetown, Caribou');
+console.log('AGRG prediction service: agrgims.cogs.nscc.ca (10-day tide+surge+TWL)');
+console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via XYZ tiles)');
+console.log('Surge scenarios: 20yr/100yr x 2020/2050/2100/2150 (Northumberland)');
+console.log('Base maps: Street, Topo, Satellite, Dark');
 
 </script>
 </body>

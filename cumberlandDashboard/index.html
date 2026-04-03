@@ -184,6 +184,63 @@
         </div>
 
 
+        <!-- Storm Surge Scenarios (integrated into simulation area) -->
+        <div class="sidebar-section">
+            <div class="section-header" id="toggle-surge">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <h2>Storm Surge Scenarios (NW Strait)</h2>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="surge-content">
+                <div class="surge-scenario-controls">
+                    <div class="surge-select-row">
+                        <label for="surge-return">Period:</label>
+                        <select class="surge-select" id="surge-return">
+                            <option value="">None (off)</option>
+                            <option value="20yr">20-Year Return</option>
+                            <option value="100yr">100-Year Return</option>
+                        </select>
+                    </div>
+                    <div class="surge-select-row">
+                        <label for="surge-horizon">Horizon:</label>
+                        <select class="surge-select" id="surge-horizon">
+                            <option value="2020">2020 (Present)</option>
+                            <option value="2050">2050</option>
+                            <option value="2100">2100</option>
+                            <option value="2150">2150</option>
+                        </select>
+                    </div>
+                    <div class="surge-view-toggle">
+                        <label style="font-size:0.72rem;font-weight:600;color:var(--text-secondary);">View:</label>
+                        <div class="side-btn-group" style="margin-left:6px;">
+                            <button class="side-btn active" data-surge-view="depth" title="Flood depth (red gradient)">Depth</button>
+                            <button class="side-btn" data-surge-view="extent" title="Flood extent (blue fill)">Extent</button>
+                        </div>
+                    </div>
+                    <div class="surge-active-label" id="surge-active-label">Select a return period to view surge scenario</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AGRG 10-Day Predictions (compact) -->
+        <div class="sidebar-section">
+            <div class="section-header" id="toggle-agrg">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-8"/></svg>
+                <h2>AGRG 10-Day Predictions</h2>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="agrg-content" style="display:none;">
+                <div class="agrg-datum-note" style="margin-bottom:8px;">
+                    Tide + surge + total water level forecasts from AGRG &mdash; CGVD2013
+                </div>
+                <div id="agrg-stations-container">
+                    <div style="text-align:center;padding:12px;color:var(--text-muted);font-size:0.72rem;">
+                        <span class="loading-spinner"></span> Loading AGRG stations&hellip;
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- KPIs -->
         <div class="sidebar-section">
             <div class="section-header">
@@ -222,6 +279,11 @@
                 <label for="layer-flood">Flood Inundation</label>
             </div>
             <div class="layer-toggle">
+                <input type="checkbox" id="layer-surge" checked>
+                <span class="layer-color-swatch" style="background: rgba(220, 38, 38, 0.5);"></span>
+                <label for="layer-surge">Storm Surge Overlay</label>
+            </div>
+            <div class="layer-toggle">
                 <input type="checkbox" id="layer-roads" checked>
                 <span class="layer-color-swatch" style="background: #e67e22;"></span>
                 <label for="layer-roads">Road Network</label>
@@ -250,6 +312,14 @@
                     <div class="legend-item">
                         <div class="legend-area" style="background: rgba(37, 99, 235, 0.35);"></div>
                         <span>Flood Inundation Zone</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-area" style="background: rgba(220, 38, 38, 0.35);"></div>
+                        <span>Surge Depth (red)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-area" style="background: rgba(6, 147, 227, 0.45);"></div>
+                        <span>Surge Extent (blue)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-line" style="background: #c0392b;"></div>
@@ -407,9 +477,9 @@
 
         <!-- Footer -->
         <div class="sidebar-footer">
-            <strong>Data Sources:</strong> CHS/DFO-MPO (Tides), OpenStreetMap (Roads &amp; Infrastructure), LiDAR-derived flood inundation models.<br>
+            <strong>Data Sources:</strong> CHS/DFO-MPO (Tides), AGRG (Predictions), OpenStreetMap (Roads &amp; Infrastructure), LiDAR-derived flood inundation models.<br>
             <strong>Project:</strong> INFT3000 Capstone &mdash; Cumberland County Flood Risk Assessment.<br>
-            <strong>Vertical Datum:</strong> CGVD2013 (converted from Chart Datum via station offsets)<br>
+            <strong>Vertical Datum:</strong> CGVD2013 (converted from CD and CGVD28 via station offsets)<br>
             <strong>Projection:</strong> NAD83(CSRS)v6 UTM Zone 20N &rarr; WGS84
         </div>
     </aside>
@@ -418,24 +488,28 @@
     <!-- MAP AREA -->
     <div class="map-area">
         <div id="map"></div>
+        <!-- Base Map Switcher -->
+        <div class="basemap-switcher" id="basemap-switcher">
+            <button class="basemap-btn active" data-layer="0" title="Street Map">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                <span class="basemap-label">Street</span>
+            </button>
+            <button class="basemap-btn" data-layer="1" title="Topographic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 18L13 4 8 14 2 8"/></svg>
+                <span class="basemap-label">Topo</span>
+            </button>
+            <button class="basemap-btn" data-layer="2" title="Satellite">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="basemap-label">Satellite</span>
+            </button>
+            <button class="basemap-btn" data-layer="3" title="Dark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <span class="basemap-label">Dark</span>
+            </button>
+        </div>
         <div class="loading-overlay" id="loading-overlay">
             <span class="loading-spinner"></span>
             <span>Loading flood data...</span>
-        </div>
-        <div class="map-info-box" id="map-info-box">
-            <h3>Cursor Position</h3>
-            <div class="info-row">
-                <span class="info-label">Lat:</span>
-                <span class="info-value" id="cursor-lat">&mdash;</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Lng:</span>
-                <span class="info-value" id="cursor-lng">&mdash;</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Zoom:</span>
-                <span class="info-value" id="cursor-zoom">&mdash;</span>
-            </div>
         </div>
     </div>
 </div>
@@ -479,8 +553,22 @@
             <table class="ref-table">
                 <tr><td>Flood Levels</td><td>0 m to 11 m (0.1 m increments)</td></tr>
                 <tr><td>Regions</td><td>Bay of Fundy (south) + Northumberland Strait (north)</td></tr>
-                <tr><td>Data Format</td><td>COG GeoTIFF rasters</td></tr>
+                <tr><td>Data Format</td><td>COG GeoTIFF rasters &rarr; XYZ tiles</td></tr>
                 <tr><td>Geometry Simplification</td><td>0.00005&deg; tolerance (~5 m)</td></tr>
+            </table>
+            <h3>Storm Surge Scenarios (Northumberland)</h3>
+            <table class="ref-table">
+                <tr><td>Return Periods</td><td>20-year and 100-year</td></tr>
+                <tr><td>Time Horizons</td><td>2020, 2050, 2100, 2150</td></tr>
+                <tr><td>Source</td><td>FloodDepth &amp; FloodOut rasters/shapefiles (NW clipped)</td></tr>
+                <tr><td>Projection</td><td>Mercator Atlantic Canada (NAD83 CSRS v7)</td></tr>
+            </table>
+            <h3>AGRG Tide Prediction Service</h3>
+            <table class="ref-table">
+                <tr><td>Service URL</td><td>agrgims.cogs.nscc.ca/arcgis/rest/services/mcfm_pro/tide_stns/MapServer</td></tr>
+                <tr><td>Datum (source)</td><td>CGVD28</td></tr>
+                <tr><td>Datum (display)</td><td>CGVD2013 (via CGVD28_13 offset ~&minus;0.60m)</td></tr>
+                <tr><td>Forecast Range</td><td>10 days (tide + surge + total water level)</td></tr>
             </table>
             <h3>Ocean Reference Points</h3>
             <table class="ref-table">
@@ -496,7 +584,7 @@
                 <tr><td>Caribou, NS</td><td>01640</td><td>&minus;1.757</td><td>CGVD2013 = CD &minus; 1.757</td></tr>
             </table>
             <div class="modal-footer-note">
-                <strong>Source:</strong> AGRG LiDAR-derived flood inundation shapefiles via NSCC partnership. Tide data from CHS/DFO-MPO Integrated Water Level System (IWLS) API. CD to CGVD2013 offsets sourced from CHS station benchmarks. All elevations referenced to CGVD2013 to enable direct comparison between observed water levels and land surface elevations.
+                <strong>Source:</strong> AGRG LiDAR-derived flood inundation shapefiles via NSCC partnership. Tide data from CHS/DFO-MPO IWLS API and AGRG prediction service. CD to CGVD2013 offsets from CHS station benchmarks. CGVD28 to CGVD2013 offsets from AGRG shapefile CGVD28_13 field. All elevations referenced to CGVD2013.
             </div>
         </div>
     </div>
@@ -575,6 +663,8 @@ function setupToggle(headerId, contentId) {
 setupToggle('toggle-tides', 'tides-content');
 setupToggle('toggle-legend', 'legend-content');
 setupToggle('toggle-reports', 'reports-content');
+setupToggle('toggle-agrg', 'agrg-content');
+setupToggle('toggle-surge', 'surge-content');
 
 // ---------- MOBILE SIDEBAR TOGGLE ----------
 (function() {
@@ -666,16 +756,6 @@ var topoLayer = new ol.layer.Tile({
     zIndex: 0
 });
 
-var darkLayer = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-        url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        maxZoom: 19,
-        attributions: '&copy; CARTO'
-    }),
-    visible: false,
-    zIndex: 0
-});
-
 var satelliteLayer = new ol.layer.Tile({
     source: new ol.source.XYZ({
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -686,10 +766,21 @@ var satelliteLayer = new ol.layer.Tile({
     zIndex: 0
 });
 
-var baseLayers = [osmBase, topoLayer, darkLayer, satelliteLayer];
+var darkLayer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+        url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        maxZoom: 19,
+        attributions: '&copy; CARTO'
+    }),
+    visible: false,
+    zIndex: 0
+});
+
+// Order: Street(0), Topo(1), Satellite(2), Dark(3) — matches basemap switcher buttons
+var baseLayers = [osmBase, topoLayer, satelliteLayer, darkLayer];
 var baseLayerNames = ['Street Map', 'Topographic', 'Satellite', 'Dark'];
 
-// Vector layers for roads, infrastructure, tide markers
+// Vector layers for roads, infrastructure, tide markers, AGRG markers
 var roadsLayer = new ol.layer.Vector({
     source: new ol.source.Vector(),
     zIndex: 20
@@ -705,6 +796,11 @@ var tideMarkersLayer = new ol.layer.Vector({
     zIndex: 30
 });
 
+var agrgMarkersLayer = new ol.layer.Vector({
+    source: new ol.source.Vector(),
+    zIndex: 31
+});
+
 var view = new ol.View({
     center: ol.proj.fromLonLat([-64.30, 45.75]),
     zoom: 10
@@ -712,29 +808,42 @@ var view = new ol.View({
 
 var map = new ol.Map({
     target: 'map',
-    layers: [osmBase, topoLayer, darkLayer, satelliteLayer, roadsLayer, infraLayer, tideMarkersLayer],
+    layers: [osmBase, topoLayer, satelliteLayer, darkLayer, roadsLayer, infraLayer, tideMarkersLayer, agrgMarkersLayer],
     view: view,
     controls: ol.control.defaults.defaults().extend([
         new ol.control.ScaleLine({ units: 'metric' })
     ])
 });
 
-// Cursor position tracking
-document.getElementById('cursor-zoom').textContent = Math.round(view.getZoom());
-map.on('pointermove', function(evt) {
-    var coords = ol.proj.toLonLat(evt.coordinate);
-    document.getElementById('cursor-lat').textContent = coords[1].toFixed(5);
-    document.getElementById('cursor-lng').textContent = coords[0].toFixed(5);
-});
-view.on('change:resolution', function() {
-    document.getElementById('cursor-zoom').textContent = Math.round(view.getZoom());
-});
+// ---------- BASE MAP SWITCHER ----------
+(function() {
+    var btns = document.querySelectorAll('.basemap-btn');
+    btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var idx = parseInt(this.getAttribute('data-layer'));
+            baseLayers.forEach(function(layer, i) {
+                layer.setVisible(i === idx);
+            });
+            btns.forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+        });
+    });
+})();
+
 
 // ---------- FLOOD LAYER STATE ----------
 var userLayers = {};
 var userLayerCounter = 0;
 var currentFloodLevel = 0;
 var currentSide = 'both';
+
+// ---------- SURGE SCENARIO STATE ----------
+var activeSurgeLayer = null;
+var surgeTileCache = {};
+
+// ---------- AGRG SERVICE CONFIGURATION ----------
+var AGRG_SERVICE_URL = 'https://agrgims.cogs.nscc.ca/arcgis/rest/services/mcfm_pro/tide_stns/MapServer';
+var agrgStations = []; // Populated from MapServer Layer 0 query
 
 // ---------- TIDE STATIONS (with CGVD2013 offsets) ----------
 var TIDE_STATIONS = [
@@ -1046,13 +1155,13 @@ function findNearbyReports(lng, lat) {
 function buildReportsPopupHtml(reports) {
     if (reports.length === 0) return '';
     var html = '<div style="margin-top:8px;padding:6px 0;border-top:1px solid var(--border-color);">' +
-        '<div style="font-weight:600;font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;">📄 Related Reports & Models</div>';
+        '<div style="font-weight:600;font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;">Related Reports & Models</div>';
     for (var i = 0; i < reports.length; i++) {
         var r = reports[i];
         if (r.type === 'pdf') {
-            html += '<a href="' + r.file + '" target="_blank" rel="noopener noreferrer" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">📑 ' + r.title + '</a>';
+            html += '<a href="' + r.file + '" target="_blank" rel="noopener noreferrer" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">PDF: ' + r.title + '</a>';
         } else {
-            html += '<a href="#" onclick="openVideoModal(this);return false;" data-video="' + r.file + '" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'"><span class="report-title" style="display:none;">' + r.title + '</span>🎬 ' + r.title + '</a>';
+            html += '<a href="#" onclick="openVideoModal(this);return false;" data-video="' + r.file + '" style="display:block;padding:3px 0;color:var(--accent-primary);font-size:0.72rem;text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'"><span class="report-title" style="display:none;">' + r.title + '</span>Video: ' + r.title + '</a>';
         }
     }
     html += '</div>';
@@ -1078,10 +1187,19 @@ TIDE_STATIONS.forEach(function(station) {
     tideMarkersLayer.getSource().addFeature(feature);
 });
 
+// ---------- AGRG STATION MARKER STYLE ----------
+var agrgMarkerStyle = new ol.style.Style({
+    image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({ color: '#e67e22' }),
+        stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+    })
+});
+
 // ---------- POPUP OVERLAY ----------
 var popupEl = document.createElement('div');
 popupEl.id = 'ol-popup';
-popupEl.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:12px 16px;max-width:280px;font-size:0.78rem;line-height:1.5;';
+popupEl.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:12px 16px;max-width:300px;font-size:0.78rem;line-height:1.5;';
 document.body.appendChild(popupEl);
 
 var popup = new ol.Overlay({
@@ -1103,15 +1221,22 @@ map.on('click', function(evt) {
             '<div class="popup-row"><span class="popup-label">Elevated:</span><span class="popup-value">' + s.thresholdElevated + 'm</span></div>' +
             '<div class="popup-row"><span class="popup-label">Critical:</span><span class="popup-value">' + s.thresholdCritical + 'm</span></div>';
         popup.setPosition(evt.coordinate);
+    } else if (feature && feature.get('agrgStation')) {
+        // AGRG prediction station popup
+        var a = feature.get('agrgStation');
+        popupEl.innerHTML =
+            '<div class="popup-title">' + (a.name || 'AGRG Station ' + a.siteId) + '</div>' +
+            '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">AGRG Prediction Station</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Site ID:</span><span class="popup-value">' + a.siteId + '</span></div>' +
+            '<div class="popup-row"><span class="popup-label">CGVD28→13 Offset:</span><span class="popup-value">' + (a.cgvd28_13 || '-0.60') + 'm</span></div>' +
+            '<div class="popup-row"><span class="popup-label">Coordinates:</span><span class="popup-value">' + a.lat.toFixed(4) + ', ' + a.lng.toFixed(4) + '</span></div>';
+        popup.setPosition(evt.coordinate);
     } else if (feature && feature.get('infraType')) {
-        // Infrastructure feature popup
         var amenity = feature.get('infraType') || 'Unknown';
         var name = feature.get('name') || amenity.replace(/_/g, ' ');
         var riskM = feature.get('flood_risk_m');
         var riskSide = feature.get('flood_risk_side');
         var coords = ol.proj.toLonLat(feature.getGeometry().getCoordinates());
-
-        // Amenity type labels
         var typeLabels = {
             'fire_station': 'Fire Station',
             'community_centre': 'Community Centre',
@@ -1122,25 +1247,20 @@ map.on('click', function(evt) {
             'doctors': 'Medical Office'
         };
         var typeLabel = typeLabels[amenity] || amenity.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
-
-        // Risk badge
         var riskHtml;
         if (riskM !== null && riskM !== undefined) {
             var riskColor = riskM <= 3 ? '#e74c3c' : riskM <= 7 ? '#f39c12' : '#3498db';
             var sideLabel = riskSide === 'fundy' ? 'Bay of Fundy' : riskSide === 'north' ? 'Northumberland Strait' : '';
             riskHtml =
                 '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:' + riskColor + '15;border:1px solid ' + riskColor + '40;">' +
-                '<span style="font-weight:600;color:' + riskColor + ';">⚠ Flood Risk at ' + riskM.toFixed(1) + 'm</span>' +
+                '<span style="font-weight:600;color:' + riskColor + ';">Flood Risk at ' + riskM.toFixed(1) + 'm</span>' +
                 (sideLabel ? '<br><span style="font-size:0.72rem;color:var(--text-secondary);">' + sideLabel + ' side</span>' : '') +
                 '</div>';
         } else {
-            riskHtml = '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);"><span style="font-weight:600;color:#27ae60;">✓ Safe within modeled range (0–15m)</span></div>';
+            riskHtml = '<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);"><span style="font-weight:600;color:#27ae60;">Safe within modeled range (0-15m)</span></div>';
         }
-
-        // Find nearby reports for this infrastructure point
         var nearbyReports = findNearbyReports(coords[0], coords[1]);
         var reportsHtml = buildReportsPopupHtml(nearbyReports);
-
         popupEl.innerHTML =
             '<div class="popup-title">' + name + '</div>' +
             '<div class="popup-row"><span class="popup-label">Type:</span><span class="popup-value">' + typeLabel + '</span></div>' +
@@ -1179,6 +1299,7 @@ function floodTileUrl(side, levelKey) {
 }
 
 // Create a tile layer for a given side + level
+// maxZoom increased to 17 — OpenLayers overzooms z15 tiles smoothly at z16-17
 function createFloodTileLayer(side, level) {
     var key = levelToKey(level);
     return new ol.layer.Tile({
@@ -1188,10 +1309,10 @@ function createFloodTileLayer(side, level) {
             maxZoom: 15,
             tileSize: 256,
             crossOrigin: 'anonymous',
-            // Don't throw errors for missing tiles (sparse tileset)
             transition: 250
         }),
-        opacity: 1, // Alpha is baked into the tile PNGs
+        maxZoom: 17,
+        opacity: 1,
         zIndex: side === 'fundy' ? 10 : 11,
         visible: true
     });
@@ -1237,8 +1358,6 @@ function updateFloodDisplay(level) {
         activeNorthLayer.setVisible(showFlood);
     }
 
-    // Tiles load on-demand via HTTP — no heavy parsing needed
-    // Small delay to let tile requests fire, then hide overlay
     setTimeout(function() {
         overlay.classList.remove('visible');
     }, 200);
@@ -1271,12 +1390,97 @@ inputEl.addEventListener('change', function(e) { applyLevel(clampLevel(parseFloa
 btnUp.addEventListener('click', function() { applyLevel(clampLevel(currentFloodLevel + FLOOD_STEP)); });
 btnDown.addEventListener('click', function() { applyLevel(clampLevel(currentFloodLevel - FLOOD_STEP)); });
 
-document.querySelectorAll('.side-btn').forEach(function(btn) {
+document.querySelectorAll('[data-side]').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.side-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('[data-side]').forEach(function(b) { b.classList.remove('active'); });
         this.classList.add('active');
         currentSide = this.getAttribute('data-side');
         updateFloodDisplay(currentFloodLevel);
+    });
+});
+
+// ---------- STORM SURGE SCENARIO TILES ----------
+// Surge scenarios use XYZ tiles in two views:
+//   Depth: assets/tiles/surge/{scenario}/{z}/{x}/{y}.png (red gradient by depth)
+//   Extent: assets/tiles/surge_extent/{scenario}/{z}/{x}/{y}.png (cyan-blue solid fill)
+var currentSurgeView = 'depth'; // 'depth' or 'extent'
+var surgeExtentCache = {};
+
+function surgeTileUrl(returnPeriod, horizon, viewMode) {
+    var folder = viewMode === 'extent' ? 'surge_extent' : 'surge';
+    return 'assets/tiles/' + folder + '/' + returnPeriod + '_' + horizon + '/{z}/{x}/{y}.png';
+}
+
+function createSurgeTileLayer(returnPeriod, horizon, viewMode) {
+    return new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            url: surgeTileUrl(returnPeriod, horizon, viewMode),
+            minZoom: 10,
+            maxZoom: 15,
+            tileSize: 256,
+            crossOrigin: 'anonymous',
+            transition: 250
+        }),
+        maxZoom: 17,
+        opacity: viewMode === 'extent' ? 0.8 : 0.7,
+        zIndex: 12,
+        visible: true
+    });
+}
+
+function removeActiveSurgeLayer() {
+    if (activeSurgeLayer) {
+        try { map.removeLayer(activeSurgeLayer); } catch(e) {}
+        activeSurgeLayer = null;
+    }
+}
+
+function updateSurgeDisplay() {
+    var returnPeriod = document.getElementById('surge-return').value;
+    var horizon = document.getElementById('surge-horizon').value;
+    var label = document.getElementById('surge-active-label');
+    var kpiEl = document.getElementById('kpi-surge-scenario');
+
+    removeActiveSurgeLayer();
+
+    if (!returnPeriod) {
+        label.textContent = 'Select a return period to view surge scenario';
+        label.classList.remove('visible');
+        if (kpiEl) kpiEl.textContent = '\u2014';
+        return;
+    }
+
+    var scenarioKey = returnPeriod + '_' + horizon;
+    var cacheKey = scenarioKey + '_' + currentSurgeView;
+    var displayName = returnPeriod.replace('yr', '-Year') + ' / ' + horizon;
+    var viewLabel = currentSurgeView === 'extent' ? ' (Extent)' : ' (Depth)';
+    label.textContent = 'Active: ' + displayName + viewLabel;
+    label.classList.add('visible');
+    if (kpiEl) kpiEl.textContent = displayName;
+
+    // Use view-specific cache
+    var cache = currentSurgeView === 'extent' ? surgeExtentCache : surgeTileCache;
+    if (!cache[scenarioKey]) {
+        cache[scenarioKey] = createSurgeTileLayer(returnPeriod, horizon, currentSurgeView);
+    }
+    activeSurgeLayer = cache[scenarioKey];
+    var showSurge = document.getElementById('layer-surge').checked;
+    activeSurgeLayer.setVisible(showSurge);
+    map.addLayer(activeSurgeLayer);
+
+    showToast('Surge ' + currentSurgeView + ': ' + displayName, 'info');
+}
+
+document.getElementById('surge-return').addEventListener('change', updateSurgeDisplay);
+document.getElementById('surge-horizon').addEventListener('change', updateSurgeDisplay);
+
+// Depth/Extent view toggle
+document.querySelectorAll('[data-surge-view]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-surge-view]').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        currentSurgeView = this.getAttribute('data-surge-view');
+        updateSurgeDisplay();
     });
 });
 
@@ -1319,13 +1523,11 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
         features.forEach(function(f) {
             var amenity = f.get('amenity') || f.get('healthcare') || f.get('emergency') || '';
             f.set('infraType', amenity);
-            // Preserve flood risk data from pre-computed geojson
             var riskM = f.get('flood_risk_m');
             var riskSide = f.get('flood_risk_side');
             if (riskM !== undefined) f.set('flood_risk_m', riskM);
             if (riskSide !== undefined) f.set('flood_risk_side', riskSide);
             var s = getInfraStyle(amenity);
-            // Color at-risk facilities with a warning ring
             var strokeColor = (riskM !== null && riskM !== undefined) ? '#e74c3c' : '#fff';
             var strokeWidth = (riskM !== null && riskM !== undefined) ? 2.5 : 2;
             f.setStyle(new ol.style.Style({
@@ -1339,11 +1541,246 @@ fetch('assets/geojson/infrastructure_cumberland.geojson')
     })
     .catch(function(err) { console.error('Infrastructure error:', err); });
 
+// ---------- AGRG TIDE PREDICTION SERVICE ----------
+// Cumberland County bounding box for spatial filter (lat 45.2-46.1, lng -65.1 to -63.1)
+var CUMBERLAND_BBOX = { minLat: 45.2, maxLat: 46.1, minLng: -65.1, maxLng: -63.1 };
+
+// Cache the service info (tables list) so we only fetch it once
+var agrgServiceInfo = null;
+
+// Query Layer 0 for station locations, filter to Cumberland area
+async function loadAGRGStations() {
+    var container = document.getElementById('agrg-stations-container');
+    try {
+        // First, fetch the service info to get the tables list
+        var infoResp = await fetch(AGRG_SERVICE_URL + '?f=json');
+        if (infoResp.ok) {
+            agrgServiceInfo = await infoResp.json();
+        }
+
+        // Use spatial filter envelope for Cumberland County area
+        var envelope = CUMBERLAND_BBOX.minLng + ',' + CUMBERLAND_BBOX.minLat + ',' + CUMBERLAND_BBOX.maxLng + ',' + CUMBERLAND_BBOX.maxLat;
+        var queryUrl = AGRG_SERVICE_URL + '/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&geometry=' + encodeURIComponent(envelope) + '&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&inSR=4326&f=json';
+        var response = await fetch(queryUrl);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var result = await response.json();
+
+        if (!result.features || result.features.length === 0) {
+            container.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:0.72rem;">No AGRG stations in Cumberland County area.</div>';
+            return;
+        }
+
+        // AGRG Layer 0 fields: site_id, stn_id, cfg_col, stn_name, prov, latitude, longitude
+        // Tables are named by site_id (e.g. table name "331" matches station site_id 331)
+        agrgStations = result.features.map(function(f) {
+            var attrs = f.attributes;
+            var geom = f.geometry;
+            return {
+                siteId: attrs.site_id,
+                stnId: attrs.stn_id,
+                name: attrs.stn_name || ('Station ' + attrs.site_id),
+                lat: geom.y,
+                lng: geom.x,
+                cgvd28_13: -0.60  // Default CGVD28→CGVD2013 offset per AGRG instructions
+            };
+        });
+
+        // Add markers to map (only Cumberland area stations — not cluttered)
+        agrgStations.forEach(function(station) {
+            var feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([station.lng, station.lat])),
+                name: station.name,
+                agrgStation: station
+            });
+            feature.setStyle(agrgMarkerStyle);
+            agrgMarkersLayer.getSource().addFeature(feature);
+        });
+
+        // Build sidebar widgets
+        container.innerHTML = '';
+        agrgStations.forEach(function(station, idx) {
+            var widgetId = 'agrg-widget-' + idx;
+            var canvasId = 'agrg-canvas-' + idx;
+            var html = '<div class="agrg-prediction-widget" id="' + widgetId + '">' +
+                '<div class="agrg-station-name"><span class="agrg-station-dot"></span>' + station.name + '</div>' +
+                '<div class="agrg-prediction-info">' +
+                    '<div class="agrg-prediction-chip"><span class="chip-label">Tide:</span> <span class="chip-value" id="agrg-tide-' + idx + '">--</span></div>' +
+                    '<div class="agrg-prediction-chip"><span class="chip-label">Surge:</span> <span class="chip-value" id="agrg-surge-' + idx + '">--</span></div>' +
+                    '<div class="agrg-prediction-chip"><span class="chip-label">Total:</span> <span class="chip-value" id="agrg-total-' + idx + '">--</span></div>' +
+                '</div>' +
+                '<div class="agrg-toggle-chart collapsed" data-canvas="' + canvasId + '">' +
+                    '<span>10-Day Prediction Chart</span>' +
+                    '<svg class="chart-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+                '</div>' +
+                '<div class="agrg-chart-container collapsed" id="agrg-chart-' + idx + '">' +
+                    '<canvas class="agrg-chart-canvas" id="' + canvasId + '"></canvas>' +
+                    '<div class="agrg-chart-legend">' +
+                        '<div class="agrg-chart-legend-item"><div class="legend-line" style="background:#2563eb;"></div> Tide</div>' +
+                        '<div class="agrg-chart-legend-item"><div class="legend-line" style="background:#dc2626;"></div> Surge</div>' +
+                        '<div class="agrg-chart-legend-item"><div class="legend-line" style="background:#16a34a;"></div> Total</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="agrg-datum-note">CGVD28&rarr;CGVD2013 offset: ' + station.cgvd28_13 + 'm</div>' +
+            '</div>';
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Wire up chart toggles
+        container.querySelectorAll('.agrg-toggle-chart').forEach(function(toggle) {
+            toggle.addEventListener('click', function() {
+                var canvasId = this.getAttribute('data-canvas');
+                var chartContainer = this.nextElementSibling;
+                if (!chartContainer) return;
+                var isCollapsed = chartContainer.classList.contains('collapsed');
+                chartContainer.classList.toggle('collapsed');
+                this.classList.toggle('collapsed');
+                if (isCollapsed) {
+                    chartContainer.style.maxHeight = chartContainer.scrollHeight + 'px';
+                } else {
+                    chartContainer.style.maxHeight = '0';
+                }
+            });
+        });
+
+        // Fetch prediction data for each station
+        for (var i = 0; i < agrgStations.length; i++) {
+            await fetchAGRGPrediction(agrgStations[i], i);
+        }
+
+        showToast('AGRG stations loaded (' + agrgStations.length + ')', 'success');
+    } catch (err) {
+        console.error('AGRG service error:', err);
+        container.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:0.72rem;">AGRG service unavailable. Check network/CORS.</div>';
+    }
+}
+
+async function fetchAGRGPrediction(station, idx) {
+    try {
+        // Tables are named by site_id (e.g. table name "331" for site_id=331)
+        // Use the cached service info to find matching table
+        if (!agrgServiceInfo || !agrgServiceInfo.tables) {
+            console.warn('No AGRG service info cached');
+            return;
+        }
+
+        // Match station.siteId to table name
+        var tableId = null;
+        var siteIdStr = (station.siteId || '').toString();
+        for (var t = 0; t < agrgServiceInfo.tables.length; t++) {
+            var tbl = agrgServiceInfo.tables[t];
+            if ((tbl.name || '').toString() === siteIdStr) {
+                tableId = tbl.id;
+                break;
+            }
+        }
+
+        if (tableId === null) {
+            console.warn('No table found for AGRG station:', station.name, 'site_id:', station.siteId);
+            return;
+        }
+
+        // Query the table for predictions — fields: tid, dt (epoch ms), tide, surge, twl
+        var tableUrl = AGRG_SERVICE_URL + '/' + tableId + '/query?where=1%3D1&outFields=*&orderByFields=dt&f=json&resultRecordCount=500';
+        var tableResp = await fetch(tableUrl);
+        if (!tableResp.ok) return;
+        var tableData = await tableResp.json();
+
+        if (!tableData.features || tableData.features.length === 0) return;
+
+        var offset = parseFloat(station.cgvd28_13) || -0.60;
+        var records = tableData.features.map(function(f) {
+            var a = f.attributes;
+            var tide = parseFloat(a.tide) || 0;
+            var surge = parseFloat(a.surge) || 0;
+            var twl = parseFloat(a.twl) || (tide + surge);
+            return {
+                datetime: a.dt,
+                tide: tide + offset,
+                surge: surge,
+                total: twl + offset
+            };
+        });
+
+        // Update latest values
+        var latest = records[records.length - 1];
+        var tideEl = document.getElementById('agrg-tide-' + idx);
+        var surgeEl = document.getElementById('agrg-surge-' + idx);
+        var totalEl = document.getElementById('agrg-total-' + idx);
+        if (tideEl) tideEl.textContent = latest.tide.toFixed(2) + 'm';
+        if (surgeEl) surgeEl.textContent = latest.surge.toFixed(2) + 'm';
+        if (totalEl) totalEl.textContent = latest.total.toFixed(2) + 'm';
+
+        // Render multi-line chart (tide, surge, total)
+        renderAGRGChart('agrg-canvas-' + idx, records);
+
+    } catch (err) {
+        console.error('AGRG prediction fetch error for', station.name, err);
+    }
+}
+
+function renderAGRGChart(canvasId, records) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || records.length < 2) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    var w = rect.width, h = rect.height;
+    var pad = { top: 6, right: 4, bottom: 6, left: 4 };
+    var chartW = w - pad.left - pad.right;
+    var chartH = h - pad.top - pad.bottom;
+
+    // Find min/max across all series
+    var allVals = [];
+    records.forEach(function(r) { allVals.push(r.tide, r.surge, r.total); });
+    var minV = Math.min.apply(null, allVals);
+    var maxV = Math.max.apply(null, allVals);
+    var range = maxV - minV || 1;
+    minV -= range * 0.1; maxV += range * 0.1; range = maxV - minV;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Zero line
+    if (minV < 0 && maxV > 0) {
+        var zeroY = pad.top + chartH - ((0 - minV) / range) * chartH;
+        ctx.strokeStyle = '#dce1e8'; ctx.lineWidth = 0.5; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(w - pad.right, zeroY); ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // Draw each series
+    var series = [
+        { key: 'tide', color: '#2563eb' },
+        { key: 'surge', color: '#dc2626' },
+        { key: 'total', color: '#16a34a' }
+    ];
+
+    series.forEach(function(s) {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 1.2;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (var i = 0; i < records.length; i++) {
+            var x = pad.left + (i / (records.length - 1)) * chartW;
+            var y = pad.top + chartH - ((records[i][s.key] - minV) / range) * chartH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    });
+}
+
+// Load AGRG stations on startup
+loadAGRGStations();
+
 
 // ---------- SIDEBAR LAYER TOGGLES (OpenLayers) ----------
 document.getElementById('layer-flood').addEventListener('change', function(e) {
     if (activeFundyLayer) activeFundyLayer.setVisible(e.target.checked);
     if (activeNorthLayer) activeNorthLayer.setVisible(e.target.checked);
+});
+document.getElementById('layer-surge').addEventListener('change', function(e) {
+    if (activeSurgeLayer) activeSurgeLayer.setVisible(e.target.checked);
 });
 document.getElementById('layer-roads').addEventListener('change', function(e) {
     roadsLayer.setVisible(e.target.checked);
@@ -1353,6 +1790,7 @@ document.getElementById('layer-infra').addEventListener('change', function(e) {
 });
 document.getElementById('layer-tides').addEventListener('change', function(e) {
     tideMarkersLayer.setVisible(e.target.checked);
+    agrgMarkersLayer.setVisible(e.target.checked);
 });
 
 // ---------- FILE UPLOAD ----------
@@ -1485,7 +1923,6 @@ function addUserLayerUI(layerId, name) {
 updateFloodDisplay(0);
 
 // ---------- MAP RESIZE ON SIDEBAR TOGGLE ----------
-// OpenLayers handles resize automatically via updateSize()
 (function() {
     var sidebar = document.getElementById('sidebar');
     if (sidebar) {
@@ -1499,10 +1936,12 @@ updateFloodDisplay(0);
     });
 })();
 
-console.log('Cumberland County Flood Dashboard initialized (OpenLayers + XYZ Tiles)');
-console.log('Tide stations: Saint John, Pointe-du-Chêne, Charlottetown, Caribou');
-console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via pre-rendered XYZ tiles)');
-console.log('Roads & Infrastructure: OpenStreetMap GeoJSON');
+console.log('Cumberland County Flood Dashboard v1.3 initialized (OpenLayers + XYZ Tiles)');
+console.log('CHS tide stations: Saint John, Pointe-du-Chene, Charlottetown, Caribou');
+console.log('AGRG prediction service: agrgims.cogs.nscc.ca (10-day tide+surge+TWL)');
+console.log('Flood data: FundySide + NorthSide (0-11m, 0.1m increments via XYZ tiles)');
+console.log('Surge scenarios: 20yr/100yr x 2020/2050/2100/2150 (Northumberland)');
+console.log('Base maps: Street, Topo, Satellite, Dark');
 
 </script>
 </body>

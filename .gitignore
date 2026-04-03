@@ -16,3 +16,25 @@ cumberlandDashboard/*.docx
 
 # Video source files (WMV originals — MP4 conversions in assets/)
 cumberlandDashboard/newData/reportsAndModels/*.wmv
+
+# Large DEM COG from scientists (raw source — processed versions used)
+cumberlandDashboard/newData/Cumber_HydroDEM_NoAboiteau_CSRp_1m_Clipped_COGTiff.tif
+
+# Reprojected surge COGs (generated locally, too large for git)
+cumberlandDashboard/assets/cog_3857/surge/*.tif
+
+# Generated surge XYZ tiles (thousands of PNGs, regenerate locally)
+cumberlandDashboard/assets/tiles/surge/
+cumberlandDashboard/assets/tiles/surge_extent/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json

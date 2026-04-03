@@ -973,10 +973,10 @@ html, body {
     background: var(--map-bg);
 }
 
-/* Map Info Box */
+/* Map Info Box - positioned below basemap switcher */
 .map-info-box {
     position: absolute;
-    top: 12px;
+    top: 46px;
     right: 12px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1686,4 +1686,322 @@ body.sidebar-open {
     border-radius: var(--radius-md);
     background: #000;
     outline: none;
+}
+
+/* ---------- Base Map Switcher ---------- */
+.basemap-switcher {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    display: flex;
+    gap: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.basemap-btn {
+    background: var(--bg-card);
+    border: none;
+    border-right: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.basemap-btn:last-child {
+    border-right: none;
+}
+
+.basemap-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.basemap-btn.active {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+.basemap-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ---------- Storm Surge Scenarios ---------- */
+.surge-scenario-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.surge-select-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.surge-select-row label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 52px;
+}
+
+.surge-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    appearance: auto;
+}
+
+.surge-select:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: -1px;
+}
+
+.surge-view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.surge-active-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    padding: 4px 0;
+    text-align: center;
+    font-style: italic;
+}
+
+.surge-active-label.visible {
+    color: var(--accent-primary);
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* ---------- AGRG Predictions ---------- */
+.agrg-prediction-widget {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.agrg-station-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.agrg-station-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e67e22;
+    border: 1.5px solid #fff;
+    flex-shrink: 0;
+}
+
+.agrg-prediction-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.agrg-prediction-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 500;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+}
+
+.agrg-prediction-chip .chip-label {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.agrg-prediction-chip .chip-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.agrg-chart-container {
+    width: 100%;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.agrg-chart-container.collapsed {
+    max-height: 0;
+}
+
+.agrg-chart-canvas {
+    width: 100%;
+    height: 80px;
+    display: block;
+}
+
+.agrg-chart-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    padding: 2px 2px 0;
+}
+
+.agrg-chart-legend {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 4px 0 0;
+}
+
+.agrg-chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+}
+
+.agrg-chart-legend-item .legend-line {
+    width: 16px;
+    height: 2px;
+    border-radius: 1px;
+}
+
+.agrg-datum-note {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--border-light);
+}
+
+.agrg-toggle-chart {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    cursor: pointer;
+    font-size: 0.72rem;
+    color: var(--accent-primary);
+    font-weight: 500;
+    user-select: none;
+}
+
+.agrg-toggle-chart .chart-chevron {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s;
+}
+
+.agrg-toggle-chart.collapsed .chart-chevron {
+    transform: rotate(-90deg);
+}
+
+/* ---------- Depth Legend Gradient ---------- */
+.legend-depth-gradient {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+}
+
+.legend-gradient-bar {
+    width: 60px;
+    height: 10px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.7));
+    border: 1px solid var(--border-light);
+}
+
+.legend-gradient-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 60px;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+}
+
+/* ---------- Responsive: Basemap Switcher ---------- */
+@media (max-width: 768px) {
+    .basemap-switcher {
+        top: auto;
+        bottom: 30px;
+        right: 10px;
+        flex-wrap: wrap;
+        max-width: 200px;
+    }
+
+    .basemap-btn {
+        font-size: 0.62rem;
+        padding: 8px 8px;
+    }
+
+    .basemap-btn span.basemap-label {
+        display: none;
+    }
+
+    .surge-select-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .surge-select-row label {
+        min-width: auto;
+    }
+
+    .agrg-prediction-info {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .basemap-switcher {
+        bottom: 24px;
+        right: 6px;
+        max-width: 180px;
+    }
+
+    .basemap-btn {
+        font-size: 0.58rem;
+        padding: 8px 6px;
+    }
 }

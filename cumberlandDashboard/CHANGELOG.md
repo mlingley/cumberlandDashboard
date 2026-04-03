@@ -2,6 +2,57 @@
 
 ---
 
+## v1.3 — New Data Integration, AGRG Predictions & Basemap Switcher
+
+**Date:** April 3, 2026
+
+### Changes
+
+**1. Base Map Switcher (Reimplemented)**
+- Floating toggle control on the map with 4 options: Street, Topographic, Satellite, Dark
+- SVG icons for each basemap type, mobile-responsive (icon-only on small screens)
+- Fixed base layer ordering bug (Satellite and Dark were swapped in v1.2)
+
+**2. AGRG 10-Day Tide & Storm Surge Predictions**
+- Integration with AGRG ArcGIS MapServer (`agrgims.cogs.nscc.ca/arcgis/rest/services/mcfm_pro/tide_stns/MapServer`)
+- Dynamically queries Layer 0 for tide station locations and attributes
+- Queries per-station prediction tables for 10-day tide, surge, and total water level forecasts
+- CGVD28 → CGVD2013 datum conversion applied using per-station `CGVD28_13` offset field (~-0.60m)
+- New sidebar section "AGRG 10-Day Predictions" with expandable multi-line charts (tide/surge/total)
+- Orange map markers distinguish AGRG stations from blue CHS stations
+- Separate layer toggle for AGRG markers
+
+**3. Storm Surge Return Period Scenarios**
+- New sidebar section "Storm Surge Scenarios" with dropdown selectors for:
+  - Return Period: 20-year / 100-year
+  - Time Horizon: 2020 / 2050 / 2100 / 2150
+- XYZ tile layer system for surge scenarios (red-colored, depth-graduated opacity)
+- Tile generation script `generate_surge_tiles.py` processes FloodDepth rasters from newData/
+- Source data: Northumberland Strait FloodDepth (Mercator Atlantic Canada → EPSG:3857)
+- Surge layer toggle in Map Layers sidebar section
+
+**4. Increased Flood Tile Resolution**
+- OpenLayers `maxZoom` increased from 15 to 17 on flood inundation layers
+- z15 tiles seamlessly overzoom to z16-17 via OpenLayers internal scaling
+- No additional tile generation needed — existing z10-z15 tiles work at higher zooms
+
+**5. Updated Dashboard KPIs**
+- Added: AGRG Stations count, Surge Scenario active indicator
+- 6 KPI cards now: CHS Stations, AGRG Stations, Sim. Water Level, Infrastructure, Data Latency, Surge Scenario
+
+**6. Legend & Reference Data Updates**
+- Legend adds: flood depth gradient bar, storm surge scenario area, AGRG prediction station marker
+- Reference Data modal updated with AGRG service details, surge scenario parameters, and CGVD28/CGVD2013 datum info
+
+**7. .gitignore Hardened**
+- Added: new COG TIF, Python bytecode, OS files, IDE settings
+- Ensures no large binary files leak into regular Git
+
+**Files changed:** `parts/part1-5.html`, `styles/map.css`, `index.html` (rebuilt), `.gitignore`, `CHANGELOG.md`
+**Files created:** `generate_surge_tiles.py`
+
+---
+
 ## v1.2 — Stakeholder Feedback Implementation
 
 **Date:** March 5, 2026
